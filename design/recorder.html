@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Record · LOOT</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  body{height:100vh;display:grid;grid-template-rows:var(--topbar-h) minmax(0,1fr) auto;overflow:hidden}
+
+  /* Stage: the live preview, with the script beside it when open */
+  .stage{display:flex;min-height:0;background:var(--stage)}
+  .view{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;padding:var(--space-4) var(--space-5) var(--space-5);gap:var(--space-3)}
+  .kind{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;justify-content:center}
+  .kind .seg button{padding:6px 12px;font-size:var(--fs-sm)}
+  .kind .what{font-size:var(--fs-xs);color:var(--fg-muted)}
+  .pv{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;container-type:size}
+  .pv .frame{width:min(100cqw,calc(100cqh * 16 / 9));border-radius:10px}
+  .pv .frame.vertical{aspect-ratio:9/16;width:min(100cqw,calc(100cqh * 9 / 16))}
+  .frame.vertical .shot{inset:5% 5% 44% 5%}
+  .frame.vertical .cam{width:62%;right:19%;bottom:5%}
+  .frame.nocam .cam{opacity:0}
+  .recbadge{position:absolute;left:12px;top:12px;z-index:6;display:none;align-items:center;gap:8px;background:rgba(20,17,24,.85);border-radius:6px;padding:4px 10px;font-size:var(--fs-sm);font-variant-numeric:tabular-nums;color:#fff}
+  .recbadge .dot{color:var(--record);animation:blink 1.2s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  body.recording .recbadge{display:flex}
+  body.recording .pv .frame{box-shadow:0 0 0 2px var(--record)}
+  body.paused .recbadge .dot{animation:none;opacity:.4}
+  .countdown{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(20,17,24,.6);z-index:7;cursor:pointer;border:0;color:#fff;width:100%}
+  .countdown b{font-weight:600;font-size:clamp(72px,18cqh,160px);line-height:1;font-variant-numeric:tabular-nums}
+  .countdown span{font-size:var(--fs-sm);color:var(--fg-muted)}
+  body.counting .countdown{display:flex}
+
+  .pv .empty{margin:auto}
+  .view .notice{width:min(100%,720px)}
+  body.noperm .recbtn{opacity:.35;pointer-events:none}
+  body.noperm .src{opacity:.5;pointer-events:none}
+  .src.bad{box-shadow:inset 0 0 0 1px var(--warn)}
+  .src.bad .lvl{width:0 !important}
+  .clip .fail{position:absolute;left:4px;top:4px;background:var(--record);color:#fff;font-size:10px;line-height:16px;padding:0 5px;border-radius:3px;z-index:3}
+  #upFail{white-space:nowrap}
+  @media (max-width:900px){#upFail .more{display:none}}
+  /* Script panel */
+  .script{width:340px;flex:none;background:var(--surface);border-left:1px solid var(--line);display:none;flex-direction:column;min-height:0}
+  body.script-open .script{display:flex}
+  .script .sh{display:flex;align-items:center;justify-content:space-between;padding:var(--space-2) var(--space-2) var(--space-2) var(--space-4);border-bottom:1px solid var(--line)}
+  .script .sh b{font-size:var(--fs-md);font-weight:600}
+  .script .text{flex:1;overflow:auto;padding:var(--space-5) var(--space-4);font-size:20px;line-height:30px;color:var(--fg-muted);outline:none}
+  .script .text p{margin:0 0 var(--space-4)}
+  .script .text p.now{color:var(--white)}
+  .script .sf{border-top:1px solid var(--line);padding:var(--space-3) var(--space-4);display:flex;flex-direction:column;gap:var(--space-2)}
+  .script .sf .row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--fs-sm)}
+  .script .sf input[type=range]{width:120px}
+  .script .note{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-faint);margin:0}
+
+  /* Bottom: clips, then the control bar */
+  .bottom{background:var(--bg);border-top:1px solid var(--line)}
+  .cliprow{display:none;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--line)}
+  body.has-clips .cliprow{display:flex}
+  .clips{display:flex;gap:var(--space-2);overflow-x:auto;flex:1;min-width:0;padding:2px}
+  .clip{flex:none;width:104px;position:relative}
+  .clip .frame{border-radius:6px}
+  .clip .frame .cam{box-shadow:0 0 0 1px #fff}
+  .clip .meta{display:flex;justify-content:space-between;font-size:var(--fs-2xs);color:var(--fg-muted);margin-top:4px;font-variant-numeric:tabular-nums}
+  .clip .acts{position:absolute;left:0;right:0;top:0;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(20,17,24,.8);border-radius:6px;opacity:0;transition:opacity var(--dur-fast)}
+  .clip:hover .acts,.clip:focus-within .acts{opacity:1}
+  .clip .acts button{font-size:var(--fs-2xs);height:24px;padding:0 7px;border:0;background:var(--surface-3);border-radius:4px;cursor:pointer}
+  .clip .acts button:hover{background:var(--purple-strong)}
+  .clip.fresh .frame{box-shadow:0 0 0 2px var(--purple-soft)}
+  .clip.retaking .frame{box-shadow:0 0 0 2px var(--warn)}
+  .cliprow .sum{font-size:var(--fs-xs);color:var(--fg-muted);white-space:nowrap}
+
+  .bar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-4)}
+  .sources{display:flex;gap:var(--space-2);min-width:0}
+  .srcwrap{position:relative;min-width:0}
+  .src{display:flex;align-items:center;gap:10px;height:48px;padding:0 10px 0 12px;border:1px solid transparent;border-radius:8px;background:var(--surface-2);cursor:pointer;text-align:left;min-width:0;max-width:190px;position:relative;overflow:hidden}
+  .src:hover{background:var(--surface-3)}
+  .src .ic.main{width:18px;height:18px}
+  .src .lbl{display:flex;flex-direction:column;min-width:0}
+  .src .lbl b{font-size:var(--fs-sm);font-weight:500;line-height:16px}
+  .src .lbl small{font-size:var(--fs-2xs);line-height:14px;color:var(--fg-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .src .ic.chev{width:14px;height:14px;color:var(--fg-faint)}
+  .src[data-on="false"]{background:transparent;border-color:var(--line)}
+  .src[data-on="false"] .ic.main{color:var(--fg-faint)}
+  .src[data-on="false"] .lbl b{color:var(--fg-muted)}
+  .src .lvl{position:absolute;left:0;bottom:0;height:3px;background:var(--ok);width:30%;transition:width 120ms linear}
+  .src[data-on="false"] .lvl{display:none}
+  .srcwrap .menu{left:0;bottom:calc(100% + 8px)}
+
+  .center{display:flex;align-items:center;gap:var(--space-3)}
+  .timer{font-size:18px;font-weight:500;font-variant-numeric:tabular-nums;width:58px;text-align:right;display:none}
+  .recbtn{width:60px;height:60px;border-radius:50%;border:3px solid var(--fg);background:transparent;display:grid;place-items:center;cursor:pointer;padding:0;flex:none}
+  .recbtn:hover{border-color:var(--white)}
+  .recbtn i{width:44px;height:44px;border-radius:50%;background:var(--record);transition:all var(--dur) var(--ease);display:block}
+  .recbtn:hover i{background:#EF7B74}
+  body.recording .recbtn i,body.counting .recbtn i{width:22px;height:22px;border-radius:5px}
+  .reclabel{font-size:var(--fs-sm);color:var(--fg-muted);width:150px}
+  .reclabel b{display:block;color:var(--fg);font-weight:500}
+  .while{display:none;gap:2px}
+  .mini{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;color:var(--fg-muted);font-size:var(--fs-2xs);padding:6px 8px;border-radius:6px;cursor:pointer;min-width:52px}
+  .mini:hover{background:var(--surface-2);color:var(--fg)}
+  body.recording .timer,body.recording .while{display:flex}
+  body.recording .timer{display:block}
+  body.recording .reclabel,body.counting .reclabel{display:none}
+  .end{display:flex;justify-content:flex-end;gap:var(--space-2)}
+  .btn.tall{height:48px;padding:0 14px;border-radius:8px}
+  .btn.tall[aria-pressed="true"]{background:var(--purple-surface);box-shadow:inset 0 0 0 1px var(--purple-line)}
+
+  /* While recording, the source buttons shrink to icons so the timer and controls have room */
+  body.recording .src .lbl,body.counting .src .lbl{display:none}
+  @media (max-width:1180px){.reclabel{display:none}}
+  @media (max-width:960px){
+    .src .lbl{display:none}
+    .src{padding:0 10px 0 14px}
+  }
+  @media (max-width:900px){
+    .stage{flex-direction:column}
+    .script{width:auto;height:34vh;border-left:0;border-top:1px solid var(--line)}
+    .script .text{font-size:17px;line-height:26px}
+  }
+  @media (max-width:560px){
+    .src .ic.chev{display:none}
+    .src{padding:0 14px}
+    .btn.tall span{display:none}
+    .kind .what{display:none}
+    .mini{min-width:44px;padding:6px 4px}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="back" href="index.html"><svg class="ic"><use href="assets/icons.svg#arrow-left"/></svg>Your videos</a>
+  <span class="sep"></span>
+  <span class="doc-title" contenteditable="true" spellcheck="false" aria-label="Video title">Untitled video</span>
+</header>
+
+<main class="stage">
+  <section class="view" aria-label="Live preview">
+    <div class="kind">
+      <div class="seg" id="kind" role="group" aria-label="What you are recording">
+        <button aria-pressed="true" data-k="long">YouTube video</button>
+        <button aria-pressed="false" data-k="short">Short</button>
+        <button aria-pressed="false" data-k="msg">Message</button>
+        <button aria-pressed="false" data-k="demo">Product demo</button>
+      </div>
+      <span class="what" id="what">Wide video, 16:9</span>
+    </div>
+    <div class="pv">
+      <div class="frame bg-brand" id="frame" data-layout="bubble">
+        <div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div><div class="row"></div><div class="row"></div></div></div></div>
+        <div class="cam"><img src="assets/avatar-256.png" alt=""></div>
+        <div class="recbadge"><span class="dot"></span><span id="badgeTime">0:00</span></div>
+        <button class="countdown" id="countdown"><b id="cdNum">3</b><span>Click to start now</span></button>
+      </div>
+      <div class="empty" id="askPerm" hidden>
+        <span class="badge"><svg class="ic"><use href="assets/icons.svg#video"/></svg></span>
+        <h2>Allow your camera and microphone</h2>
+        <p>Your browser will ask for permission. LOOT only records after you press Record.</p>
+        <button class="btn primary lg" id="allow">Allow camera and microphone</button>
+      </div>
+      <div class="empty" id="blocked" hidden>
+        <span class="badge" style="color:var(--record)"><svg class="ic"><use href="assets/icons.svg#video"/></svg></span>
+        <h2>Your browser is blocking the camera and microphone</h2>
+        <ol><li>Click the icon at the left of the address bar.</li><li>Set Camera and Microphone to Allow.</li><li>Reload this page.</li></ol>
+        <a class="btn primary lg" href="recorder.html">Reload the page</a>
+      </div>
+    </div>
+    <div class="notice warn" id="noSound" hidden>
+      <span class="dot"></span>
+      <span class="grow"><b>No sound is coming from Shure MV7.</b> Check that it is plugged in and not muted, or pick another microphone.</span>
+      <button class="btn" id="pickMic">Choose a microphone</button>
+    </div>
+  </section>
+
+  <aside class="script" aria-label="Script">
+    <div class="sh"><b>Script</b><button class="iconbtn" id="scriptClose" aria-label="Close script"><svg class="ic"><use href="assets/icons.svg#x"/></svg></button></div>
+    <div class="text" id="scriptText" contenteditable="true" spellcheck="false">
+      <p class="now">Today I want to show you how I plan a paid media test when the budget is small.</p>
+      <p>The first thing I do is write down one question the test has to answer.</p>
+      <p>If you can't say the question in one sentence, the test is too big.</p>
+      <p>For the budget, I split it so that eighty percent goes to the test and twenty percent is held back.</p>
+      <p>When the test ends, I look at cost per qualified lead, not clicks.</p>
+    </div>
+    <div class="sf">
+      <div class="row"><span>Scroll while I record</span><button class="switch" role="switch" aria-checked="true" aria-label="Scroll while I record"></button></div>
+      <div class="row"><span>Scroll speed</span><input type="range" value="45" style="--val:45%" aria-label="Scroll speed"></div>
+      <p class="note">Type or paste your script here. It is only for reading: the transcript in the editor comes from what you actually say.</p>
+    </div>
+  </aside>
+</main>
+
+<footer class="bottom">
+  <div class="cliprow">
+    <div class="clips" id="clips" aria-label="Recorded clips"></div>
+    <div class="notice err" id="upFail" hidden style="padding:6px 8px 6px 12px">
+      <span class="dot"></span><span class="grow">Clip 2 didn't upload.<span class="more"> It is safe on this computer.</span></span>
+      <button class="btn sm" id="retryUp">Try again</button>
+    </div>
+    <span class="sum" id="sum"></span>
+    <a class="btn primary lg" href="editor.html">Edit video</a>
+  </div>
+  <div class="bar">
+    <div class="sources">
+      <div class="srcwrap">
+        <button class="src" data-src="screen" data-on="true" aria-haspopup="menu"><svg class="ic main"><use href="assets/icons.svg#monitor"/></svg><span class="lbl"><b>Screen</b><small>Chrome tab</small></span><svg class="ic chev"><use href="assets/icons.svg#chevron-down"/></svg></button>
+        <div class="menu" hidden><div class="mh">Screen</div>
+          <button aria-checked="true" data-v="Chrome tab"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Chrome tab</button>
+          <button aria-checked="false" data-v="A window"><svg class="ic"><use href="assets/icons.svg#check"/></svg>A window</button>
+          <button aria-checked="false" data-v="Entire screen"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Entire screen</button>
+          <hr><button aria-checked="false" data-v="off"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Don't record the screen</button></div>
+      </div>
+      <div class="srcwrap">
+        <button class="src" data-src="camera" data-on="true" aria-haspopup="menu"><svg class="ic main"><use href="assets/icons.svg#video"/></svg><span class="lbl"><b>Camera</b><small>FaceTime HD</small></span><svg class="ic chev"><use href="assets/icons.svg#chevron-down"/></svg></button>
+        <div class="menu" hidden><div class="mh">Camera</div>
+          <button aria-checked="true" data-v="FaceTime HD"><svg class="ic"><use href="assets/icons.svg#check"/></svg>FaceTime HD</button>
+          <button aria-checked="false" data-v="Insta360 Link"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Insta360 Link</button>
+          <hr><button aria-checked="false" data-v="off"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Turn the camera off</button></div>
+      </div>
+      <div class="srcwrap">
+        <button class="src" data-src="mic" data-on="true" aria-haspopup="menu"><svg class="ic main"><use href="assets/icons.svg#mic"/></svg><span class="lbl"><b>Microphone</b><small>Shure MV7</small></span><svg class="ic chev"><use href="assets/icons.svg#chevron-down"/></svg><i class="lvl" id="lvl"></i></button>
+        <div class="menu" hidden><div class="mh">Microphone</div>
+          <button aria-checked="true" data-v="Shure MV7"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Shure MV7</button>
+          <button aria-checked="false" data-v="MacBook microphone"><svg class="ic"><use href="assets/icons.svg#check"/></svg>MacBook microphone</button>
+          <hr><button aria-checked="false" data-v="off"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Mute the microphone</button></div>
+      </div>
+    </div>
+
+    <div class="center">
+      <span class="timer" id="timer">0:00</span>
+      <button class="recbtn" id="rec" aria-label="Start recording"><i></i></button>
+      <span class="reclabel"><b id="recTitle">Start recording</b><span id="recSub">3 second countdown</span></span>
+      <div class="while">
+        <button class="mini" id="pause"><svg class="ic lg"><use href="assets/icons.svg#pause"/></svg><span id="pauseLbl">Pause</span></button>
+        <button class="mini" id="restart"><svg class="ic lg"><use href="assets/icons.svg#rotate-ccw"/></svg>Start over</button>
+        <button class="mini" id="discard"><svg class="ic lg"><use href="assets/icons.svg#trash-2"/></svg>Discard</button>
+      </div>
+    </div>
+
+    <div class="end">
+      <button class="btn tall" id="scriptBtn" aria-pressed="false"><svg class="ic lg"><use href="assets/icons.svg#scroll-text"/></svg><span>Script</span></button>
+    </div>
+  </div>
+</footer>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const B=document.body,frame=$('#frame');
+$$('.switch').forEach(s=>s.addEventListener('click',()=>s.setAttribute('aria-checked',s.getAttribute('aria-checked')!=='true')));
+
+// What you are recording
+const kinds={long:'Wide video, 16:9',short:'Vertical video, 9:16, up to 60 seconds',msg:'Camera only, with a link you can share',demo:'Screen and camera, with zoom on your clicks'};
+let kind='long',srcOn={screen:true,camera:true,mic:true};
+function layout(){
+  frame.classList.toggle('vertical',kind==='short');
+  frame.classList.toggle('nocam',!srcOn.camera);
+  frame.dataset.layout=(!srcOn.screen||kind==='msg')?'cam':'bubble';
+}
+$('#kind').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#kind button').forEach(x=>x.setAttribute('aria-pressed',x===b));kind=b.dataset.k;$('#what').textContent=kinds[kind];layout();});
+
+// Source menus
+function closeMenus(){$$('.srcwrap .menu').forEach(m=>m.hidden=true);}
+$$('.src').forEach(btn=>{const menu=btn.nextElementSibling;btn.title=$('b',btn).textContent;
+  btn.addEventListener('click',e=>{e.stopPropagation();const open=menu.hidden;closeMenus();menu.hidden=!open;});
+  menu.addEventListener('click',e=>{const o=e.target.closest('button');if(!o)return;$$('button',menu).forEach(x=>x.setAttribute('aria-checked',x===o));
+    const off=o.dataset.v==='off';btn.dataset.on=!off;$('small',btn).textContent=off?'Off':o.dataset.v;srcOn[btn.dataset.src]=!off;layout();closeMenus();});});
+document.addEventListener('click',closeMenus);
+setInterval(()=>{$('#lvl').style.width=(15+Math.random()*60)+'%';},140);
+
+// Script panel
+function setScript(open){B.classList.toggle('script-open',open);$('#scriptBtn').setAttribute('aria-pressed',open);}
+$('#scriptBtn').onclick=()=>setScript(!B.classList.contains('script-open'));
+$('#scriptClose').onclick=()=>setScript(false);
+
+// Clips
+let clips=[],retaking=null;
+const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+function renderClips(fresh){
+  B.classList.toggle('has-clips',clips.length>0);
+  const c=$('#clips');c.innerHTML='';
+  clips.forEach((k,i)=>{const n=i+1,d=document.createElement('div');d.className='clip'+(n===retaking?' retaking':'')+(n===fresh?' fresh':'');
+    d.innerHTML=`<div class="frame bg-brand${k.v?' ':''}" data-layout="${k.l}">${k.l==='cam'?'':'<div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div></div></div></div>'}<div class="cam"><img src="assets/avatar-256.png" alt=""></div></div>
+    <div class="acts"><button data-retake="${n}">Retake</button><button data-del="${n}">Delete</button></div>
+    <div class="meta"><span>Clip ${n}</span><span>${fmt(k.len)}</span></div>`;c.appendChild(d);});
+  $('#sum').textContent=clips.length?`${clips.length} ${clips.length===1?'clip':'clips'}, ${fmt(clips.reduce((a,k)=>a+k.len,0))}`:'';
+  idleLabel();
+}
+function idleLabel(){$('#recTitle').textContent=retaking?`Retake clip ${retaking}`:clips.length?'Record another clip':'Start recording';$('#recSub').textContent=retaking?'Replaces the old take':'3 second countdown';$('#rec').setAttribute('aria-label',$('#recTitle').textContent);}
+$('#clips').addEventListener('click',e=>{const r=e.target.closest('[data-retake]'),d=e.target.closest('[data-del]');
+  if(r){retaking=+r.dataset.retake;renderClips();start();}
+  if(d){clips.splice(+d.dataset.del-1,1);renderClips();}});
+
+// Record flow
+let cd,tick,secs=0;
+const show=()=>{$('#timer').textContent=$('#badgeTime').textContent=fmt(secs);};
+function start(){closeMenus();B.classList.remove('recording','paused');B.classList.add('counting');let n=3;$('#cdNum').textContent=n;clearInterval(cd);clearInterval(tick);
+  cd=setInterval(()=>{n--;if(n<=0)go();else $('#cdNum').textContent=n;},800);}
+function run(){clearInterval(tick);tick=setInterval(()=>{secs++;show();},1000);}
+function go(){clearInterval(cd);B.classList.remove('counting','paused');B.classList.add('recording');$('#rec').setAttribute('aria-label','Stop recording');$('#pauseLbl').textContent='Pause';secs=0;show();run();}
+function stop(save){clearInterval(tick);clearInterval(cd);const was=B.classList.contains('recording');B.classList.remove('recording','counting','paused');
+  let fresh=null;if(save&&was){const c={len:Math.max(secs,3),l:frame.dataset.layout};if(retaking){clips[retaking-1]=c;fresh=retaking;}else{clips.push(c);fresh=clips.length;}}
+  retaking=null;renderClips(fresh);}
+$('#countdown').onclick=go;
+$('#rec').onclick=()=>B.classList.contains('recording')?stop(true):B.classList.contains('counting')?stop(false):start();
+$('#discard').onclick=()=>stop(false);
+$('#restart').onclick=start;
+$('#pause').onclick=()=>{const p=B.classList.toggle('paused');$('#pauseLbl').textContent=p?'Resume':'Pause';if(p)clearInterval(tick);else run();};
+renderClips();
+
+// Other moments, opened with ?state=... (see states.html)
+const state=new URLSearchParams(location.search).get('state');
+function noPerm(id){B.classList.add('noperm');frame.hidden=true;frame.style.display='none';$(id).hidden=false;$$('.src small').forEach(x=>x.textContent='Not allowed yet');$('#recTitle').textContent='Recording is off';$('#recSub').textContent='Allow access first';}
+if(state==='permission'){noPerm('#askPerm');$('#allow').onclick=()=>location.href='recorder.html';}
+if(state==='blocked')noPerm('#blocked');
+if(state==='nomic'){const mic=$('.src[data-src="mic"]');mic.classList.add('bad');$('#noSound').hidden=false;$('#pickMic').onclick=e=>{e.stopPropagation();closeMenus();mic.nextElementSibling.hidden=false;};
+  mic.nextElementSibling.addEventListener('click',()=>{mic.classList.remove('bad');$('#noSound').hidden=true;});}
+if(state==='uploadfail'){clips=[{len:42,l:'cam'},{len:70,l:'bubble'}];renderClips();
+  const c2=$$('.clip')[1];const f=document.createElement('span');f.className='fail';f.textContent='Not uploaded';c2.appendChild(f);$('#upFail').hidden=false;
+  $('#retryUp').onclick=()=>{$('#upFail').hidden=true;f.remove();};}
+</script>
+</body>
+</html>

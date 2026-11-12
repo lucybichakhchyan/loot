@@ -1,0 +1,20 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: b24e9a9b-af75-45b0-bb44-88ee0bd44d2e
+name: loot-cuts
+version: 1
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+  required: ["project"]
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine cuts ${{ inputs.project }}'
+      workingDir: "/app"
+      timeout: 600000

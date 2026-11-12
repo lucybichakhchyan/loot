@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit · LOOT</title>
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  body{height:100vh;display:grid;grid-template-rows:var(--topbar-h) minmax(0,1fr) auto;overflow:hidden}
+  .main{display:grid;grid-template-columns:minmax(0,1fr) 420px;min-height:0}
+
+  /* Video */
+  .viewer{background:var(--stage);display:flex;flex-direction:column;min-width:0;min-height:0}
+  .pv{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:var(--space-4) var(--space-5) 0;container-type:size}
+  .pv .frame{width:min(100cqw,calc(100cqh * 16 / 9));border-radius:10px}
+  .playbar{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5)}
+  .play{width:36px;height:36px;border-radius:50%;border:0;background:var(--fg);color:#1A1620;display:grid;place-items:center;cursor:pointer;flex:none}
+  .play:hover{background:var(--white)}
+  .play .ic{width:15px;height:15px}
+  .time{font-size:var(--fs-sm);font-variant-numeric:tabular-nums;color:var(--fg-muted);white-space:nowrap}
+  .time b{color:var(--fg);font-weight:500}
+  .playbar .select{width:64px;height:28px;font-size:var(--fs-xs);margin-left:auto}
+
+  /* Side panel with two tabs */
+  .panel{background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+  .ptabs{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin:var(--space-3) var(--space-4) 0;background:var(--surface-2);border-radius:8px;padding:3px}
+  .ptabs button{border:0;background:transparent;color:var(--fg-muted);font-size:var(--fs-md);font-weight:500;padding:7px 0;border-radius:6px;cursor:pointer}
+  .ptabs button:hover{color:var(--fg)}
+  .ptabs button[aria-selected="true"]{background:var(--purple-surface);color:var(--fg);box-shadow:inset 0 0 0 1px var(--purple-line)}
+  .pbody{flex:1;overflow:auto;padding:var(--space-4);position:relative}
+  .pbody[hidden]{display:none}
+
+  /* Transcript tab */
+  .found{display:flex;align-items:center;gap:var(--space-2);background:var(--purple-surface);box-shadow:inset 0 0 0 1px var(--purple-line);border-radius:8px;padding:8px 8px 8px 12px;font-size:var(--fs-sm);margin-bottom:var(--space-3)}
+  .found .ic{color:var(--purple-soft)}
+  .found span{flex:1;min-width:0}
+  .found[hidden]{display:none}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-4)}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--fg-muted);font-size:var(--fs-xs);padding:5px 10px 5px 8px;border-radius:999px;cursor:pointer}
+  .chip .ic{width:13px;height:13px;opacity:.25}
+  .chip[aria-pressed="true"]{background:var(--surface-2);color:var(--fg);border-color:transparent}
+  .chip[aria-pressed="true"] .ic{opacity:1;color:var(--ok)}
+  .tip{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-faint);margin:0 0 var(--space-4)}
+  .transcript{font-size:15px;line-height:26px;color:var(--fg)}
+  .para{display:grid;grid-template-columns:40px minmax(0,1fr);gap:var(--space-2);margin-bottom:var(--space-4)}
+  .para time{font-size:var(--fs-2xs);color:var(--fg-faint);font-variant-numeric:tabular-nums;padding-top:1px;user-select:none}
+  .para p{margin:0}
+  .s{cursor:pointer;border-radius:3px;padding:1px 0}
+  .s:hover{background:rgba(246,246,244,.06)}
+  .s.now{background:rgba(171,140,240,.14)}
+  .cutx{text-decoration:line-through;text-decoration-color:var(--record);color:var(--fg-faint);cursor:pointer}
+  .cutx:hover{color:var(--fg-muted);background:rgba(230,106,99,.12)}
+  .pause{font-size:var(--fs-2xs);color:var(--fg-faint);border:1px dashed var(--fg-faint);border-radius:4px;padding:1px 5px;white-space:nowrap}
+  .cutx.pause{border-color:var(--record)}
+  .sug{background:rgba(171,140,240,.2);box-shadow:inset 0 -2px 0 var(--purple-soft);cursor:pointer;border-radius:2px;padding:1px 0}
+  .sug.active{background:rgba(171,140,240,.36)}
+  .sugcard{display:flex;flex-direction:column;gap:8px;margin:6px 0 10px;padding:10px 12px;border-radius:8px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--purple-line);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+  .sugcard[hidden]{display:none}
+  .sugcard .why{color:var(--fg-muted)}
+  .sugcard .acts{display:flex;gap:6px;align-items:center}
+  .sugcard .n{margin-left:auto;font-size:var(--fs-xs);color:var(--fg-faint)}
+  .selcut{position:fixed;z-index:35;display:none;align-items:center;gap:6px;height:32px;padding:0 12px;border:0;border-radius:8px;background:var(--fg);color:#1A1620;font-size:var(--fs-sm);font-weight:600;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  .selcut.show{display:inline-flex}
+
+  /* Style tab */
+  .sec{padding:var(--space-4) 0;border-top:1px solid var(--line)}
+  .sec:first-child{border-top:0;padding-top:0}
+  .sec h3{margin:0;font-size:var(--fs-md);line-height:var(--lh-md);font-weight:600}
+  .sech{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-3)}
+  .sec .sub{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-muted);margin:calc(var(--space-2) * -1) 0 var(--space-3)}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-2)}
+  .tiles.three{grid-template-columns:repeat(3,1fr)}
+  .tile{border:0;background:transparent;padding:0;cursor:pointer;text-align:center;color:var(--fg-muted);font-size:var(--fs-xs);display:flex;flex-direction:column;gap:6px}
+  .tile .frame{width:100%;border-radius:6px;pointer-events:none;box-shadow:0 0 0 1px var(--line)}
+  .tile .frame .cam{box-shadow:0 0 0 1px rgba(246,246,244,.9)}
+  .tile:hover .frame{box-shadow:0 0 0 1px var(--control-border)}
+  .tile[aria-pressed="true"]{color:var(--fg)}
+  .tile[aria-pressed="true"] .frame{box-shadow:0 0 0 2px var(--purple-soft)}
+  .tile .cap{font-size:8px;bottom:14%}
+  .swatches{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .sw{width:40px;height:40px;border-radius:8px;border:1px solid var(--line);cursor:pointer;padding:0}
+  .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--purple-soft)}
+  .line{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--fs-sm)}
+  .line + .line{margin-top:var(--space-3)}
+  .dim{opacity:.4;pointer-events:none}
+  .compare{display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-3)}
+  .compare .seg{flex:1}
+  .wave{height:36px;display:flex;align-items:center;gap:2px;padding:0 8px;background:var(--surface-2);border-radius:6px;margin-top:var(--space-2)}
+  .wave i{flex:1;background:var(--waveform);border-radius:1px}
+  .wave.noisy i{background:rgba(246,246,244,.35)}
+
+  /* Timeline */
+  .timeline{background:var(--bg);border-top:1px solid var(--line);min-width:0}
+  .tbar{display:flex;align-items:center;gap:var(--space-1);padding:6px var(--space-3)}
+  .tbar .btn{background:transparent;color:var(--fg-muted);padding:0 10px}
+  .tbar .btn:hover{background:var(--surface-2);color:var(--fg)}
+  .tbar .vsep{width:1px;height:18px;background:var(--line);margin:0 var(--space-1)}
+  .tbar .zoomctl{margin-left:auto;display:flex;align-items:center;gap:var(--space-2);width:150px;color:var(--fg-faint)}
+  .tgrid{display:grid;grid-template-columns:76px minmax(0,1fr);padding-bottom:var(--space-2)}
+  .tlabels{padding-top:20px}
+  .tlabels div{display:flex;align-items:center;padding-left:var(--space-4);font-size:var(--fs-xs);color:var(--fg-muted)}
+  .tracks{position:relative;margin-right:var(--space-4);cursor:text}
+  .ruler{height:20px;position:relative}
+  .ruler span{position:absolute;top:3px;font-size:10px;color:var(--fg-faint);font-variant-numeric:tabular-nums;padding-left:4px;border-left:1px solid var(--line);height:14px;line-height:12px}
+  .track{position:relative;background:var(--surface);border-radius:6px;margin-bottom:4px}
+  .h-video{height:44px} .h-thin{height:26px}
+  .blk{position:absolute;top:0;bottom:0;border-radius:6px;font-size:var(--fs-2xs);white-space:nowrap;overflow:hidden;cursor:pointer;border:0;padding:0;color:inherit;text-align:left}
+  .blk.clip{background:var(--track-clip);box-shadow:inset 0 0 0 1px var(--track-clip-edge);display:flex;align-items:center;gap:1px;padding:0 5px}
+  .blk.clip b{position:absolute;left:8px;top:3px;font-weight:500;color:var(--fg);z-index:1}
+  .blk.clip i{flex:1;background:var(--waveform);border-radius:1px;opacity:.7;margin-top:12px}
+  .blk.clip.removed{opacity:.3}
+  .blk.zoom{background:var(--track-zoom);box-shadow:inset 0 0 0 1px var(--track-zoom-edge);color:var(--warn);padding:0 6px;line-height:26px;min-width:34px}
+  .blk.selected{box-shadow:inset 0 0 0 2px var(--fg)}
+  .capchips{position:absolute;inset:0;display:flex;gap:3px;overflow:hidden;align-items:center;padding:0 3px}
+  .capchips span{flex:none;font-size:10px;line-height:18px;padding:0 6px;border-radius:4px;background:var(--surface-2);color:var(--fg-muted);white-space:nowrap}
+  .mark{position:absolute;top:0;bottom:0;border-radius:2px;z-index:2;pointer-events:none}
+  .mark.cut{background:repeating-linear-gradient(135deg,rgba(230,106,99,.5) 0 3px,rgba(230,106,99,.15) 3px 6px);box-shadow:inset 0 0 0 1px var(--record)}
+  .mark.sugg{background:rgba(171,140,240,.25);box-shadow:inset 0 0 0 1px var(--purple-soft)}
+  .split{position:absolute;top:0;bottom:0;width:2px;background:var(--bg);z-index:3}
+  .playhead{position:absolute;top:0;bottom:4px;width:2px;margin-left:-1px;background:var(--fg);z-index:5;pointer-events:none;border-radius:1px}
+  .playhead::before{content:"";position:absolute;top:0;left:-4px;width:10px;height:10px;border-radius:3px 3px 6px 6px;background:var(--fg)}
+  .zpop{position:absolute;bottom:calc(100% - 12px);z-index:20;width:240px;background:var(--surface-2);border:1px solid var(--purple-line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 32px rgba(0,0,0,.45);cursor:default;font-size:var(--fs-sm)}
+  .zpop[hidden]{display:none}
+  .legend{display:flex;gap:var(--space-4);font-size:var(--fs-2xs);color:var(--fg-faint);margin-left:var(--space-3)}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:10px;height:10px;border-radius:2px;display:block}
+
+  /* Export dialog */
+  .big{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+  .big .btn{height:44px;font-size:15px}
+  .big small{font-size:var(--fs-xs);color:var(--fg-muted);text-align:center}
+  .progress{height:4px;background:var(--surface-3);border-radius:2px;overflow:hidden}
+  .progress i{display:block;height:100%;width:0;background:var(--purple-soft);transition:width 1.4s var(--ease)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+  .or{display:flex;align-items:center;gap:var(--space-3);font-size:var(--fs-xs);color:var(--fg-faint)}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  @media (max-width:900px){
+    .main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(150px,34vh) minmax(0,1fr)}
+    .panel{border-left:0;border-top:1px solid var(--line)}
+    .legend{display:none}
+    .hide-s{display:none}
+    .tgrid{grid-template-columns:60px minmax(0,1fr)}
+    .tlabels div{padding-left:var(--space-3)}
+    .h-video{height:36px} .h-thin{height:22px}
+    .blk.zoom{line-height:22px}
+    .pv{padding:var(--space-3) var(--space-3) 0}
+    .playbar{padding:var(--space-2) var(--space-3)}
+  }
+  @media (max-width:560px){
+    .tbar .btn span,.tbar .zoomctl{display:none}
+    .tiles{grid-template-columns:repeat(2,1fr)}
+  }
+  .pv .shot{background:transparent;border-radius:6px}
+  .shot video{width:100%;height:100%;object-fit:contain}
+  .cam video{width:100%;height:100%;object-fit:cover}
+  #preview{container-type:inline-size}
+  #preview .cap{font-size:max(11px,3.3cqw)}
+  #preview .mark{font-size:max(8px,2cqw)}
+  .pv .frame.vertical{aspect-ratio:9/16;width:min(100cqw,calc(100cqh * 9 / 16))}
+  .frame.vertical .shot{inset:5% 5% 44% 5%}
+  .frame.vertical .cam{width:62%;right:19%;bottom:5%}
+  .frame.vertical[data-layout="cam"] .cam{width:100%;right:0;bottom:0}
+  .frame.vertical .cap{bottom:42%;white-space:normal;width:86%}
+  #preview.vertical .cap{font-size:max(11px,6cqw)}
+  .w{cursor:pointer;border-radius:3px;padding:1px 0}
+  .w:hover{background:rgba(246,246,244,.06)}
+  .w.now{background:rgba(171,140,240,.22)}
+  .w.cutx.now{background:transparent}
+  .pause{cursor:pointer}
+  .tile.dim{opacity:.35;cursor:not-allowed}
+  .blk.clip.removed b{text-decoration:line-through}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="back" href="/"><svg class="ic"><use href="/static/assets/icons.svg#arrow-left"/></svg><span class="hide-s">Your videos</span></a>
+  <span class="sep"></span>
+  <span class="doc-title" contenteditable="true" spellcheck="false" aria-label="Video title"></span>
+  <div class="right">
+    <span class="saved hide-s">Saved</span>
+    <button class="iconbtn" id="undo" title="Undo" aria-label="Undo"><svg class="ic"><use href="/static/assets/icons.svg#undo-2"/></svg></button>
+    <button class="iconbtn" id="redo" title="Redo" aria-label="Redo" disabled><svg class="ic"><use href="/static/assets/icons.svg#redo-2"/></svg></button>
+    <button class="btn primary" id="exportBtn"><svg class="ic"><use href="/static/assets/icons.svg#download"/></svg>Export</button>
+  </div>
+</header>
+
+<main class="main">
+  <section class="viewer" aria-label="Video">
+    <div class="pv">
+      <div class="frame bg-brand" id="preview" data-layout="bubble">
+        <div class="shot"><video id="screenV" muted playsinline preload="auto"></video></div>
+        <div class="cam"><video id="camV" muted playsinline preload="auto"></video></div>
+        <div class="mark-name mark" id="nameMark" style="position:absolute;inset:auto;left:3%;top:4%;pointer-events:none">Lucy Bichakhchyan</div>
+        <div class="cap" id="cap" style="display:none"></div>
+        <audio id="master" preload="auto"></audio>
+      </div>
+    </div>
+    <div class="playbar">
+      <button class="play" id="play" aria-label="Play"><svg class="ic fill"><use href="/static/assets/icons.svg#play"/></svg></button>
+      <span class="time"><b id="tc">0:00</b> / <span id="total">0:00</span></span>
+      <select class="select" id="speed" aria-label="Playback speed"><option value="1">1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <div class="ptabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="transcript">Transcript</button>
+      <button role="tab" aria-selected="false" data-tab="style">Style</button>
+    </div>
+
+    <!-- TRANSCRIPT -->
+    <div class="pbody" id="tab-transcript">
+      <div class="empty" id="making">
+        <span class="spin" style="width:28px;height:28px"></span>
+        <h2 id="makingTitle">Getting your video ready</h2>
+        <p>This takes about a minute for every few minutes of video. You can leave this page and come back.</p>
+        <div class="meter-bar"><i id="makingBar" style="width:4%"></i></div>
+      </div>
+      <div class="empty" id="noTranscript" hidden>
+        <span class="badge" style="color:var(--record)"><svg class="ic"><use href="/static/assets/icons.svg#scroll-text"/></svg></span>
+        <h2>This video couldn't be processed</h2>
+        <p>The server stopped partway. Your recording is safe.</p>
+        <button class="btn primary lg" id="retry">Try again</button>
+        </div>
+      <div id="transcriptReady" hidden>
+      <div class="found" id="found" hidden>
+        <svg class="ic"><use href="/static/assets/icons.svg#sparkles"/></svg>
+        <span><b id="foundN">0</b> <span id="foundWord">possible mistakes</span> found</span>
+        <button class="btn sm" id="review">Review</button>
+        <button class="btn sm primary" id="cutAll">Cut all</button>
+      </div>
+      <div class="chips">
+        <button class="chip" id="chipFillers" aria-pressed="true"><svg class="ic"><use href="/static/assets/icons.svg#check"/></svg>Remove "um" and "uh"</button>
+        <button class="chip" id="chipPauses" aria-pressed="true"><svg class="ic"><use href="/static/assets/icons.svg#check"/></svg>Shorten long pauses</button>
+      </div>
+      <p class="tip">Select any words and choose Cut to remove that part of the video. Click a crossed-out part to bring it back.<span id="tipExtra"></span></p>
+
+      <div class="transcript" id="transcript">
+        </div>
+    </div>
+    </div>
+
+    <!-- STYLE -->
+    <div class="pbody" id="tab-style" hidden>
+      <div class="sec">
+        <div class="sech"><h3>Camera and screen</h3></div>
+        <div class="tiles" id="layouts">
+          <button class="tile" aria-pressed="true" data-l="bubble"><div class="frame bg-brand" data-layout="bubble"><div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div><div class="cam"><img src="/static/assets/avatar-256.png" alt=""></div></div>Bubble</button>
+          <button class="tile" aria-pressed="false" data-l="side"><div class="frame bg-brand" data-layout="side"><div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div><div class="cam"><img src="/static/assets/avatar-256.png" alt=""></div></div>Side by side</button>
+          <button class="tile" aria-pressed="false" data-l="cam"><div class="frame bg-brand" data-layout="cam"><div class="shot"></div><div class="cam"><img src="/static/assets/avatar-256.png" alt=""></div></div>Camera only</button>
+          <button class="tile" aria-pressed="false" data-l="screen"><div class="frame bg-brand" data-layout="screen"><div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div><div class="cam"></div></div>Screen only</button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sech"><h3>Captions</h3><button class="switch" role="switch" aria-checked="true" id="capSwitch" aria-label="Show captions"></button></div>
+        <div class="tiles three" id="capStyles">
+          <button class="tile" aria-pressed="true" data-c=""><div class="frame" style="background:#2c2c2c"><div class="cap">one <em>question</em></div></div>Bold</button>
+          <button class="tile" aria-pressed="false" data-c="boxed"><div class="frame" style="background:#2c2c2c"><div class="cap boxed">one <em>question</em></div></div>Boxed</button>
+          <button class="tile" aria-pressed="false" data-c="plain"><div class="frame" style="background:#2c2c2c"><div class="cap plain">one question</div></div>Plain</button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sech"><h3>Background</h3></div>
+        <div class="swatches" id="bgs">
+          <button class="sw" aria-pressed="true" aria-label="Violet glow" data-bg="glow" style="background:radial-gradient(120% 90% at 80% 10%,#3a2a55,#141118)"></button>
+          <button class="sw" aria-pressed="false" aria-label="Charcoal" data-bg="charcoal" style="background:#1A1A1A"></button>
+          <button class="sw" aria-pressed="false" aria-label="Deep purple" data-bg="purple" style="background:#2D253A"></button>
+          <button class="sw" aria-pressed="false" aria-label="Off-white" data-bg="offwhite" style="background:#F6F6F4"></button>
+          <button class="sw" aria-pressed="false" aria-label="Bright purple" data-bg="bright" style="background:#8A2BE2"></button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sech"><h3>Clean up the sound</h3><button class="switch" role="switch" aria-checked="true" id="soundSwitch" aria-label="Clean up the sound"></button></div>
+        <p class="sub">Turns down background noise. The volume is evened out either way, and your original recording is kept.</p>
+        <div id="soundBox">
+          <div class="compare"><div class="seg" id="ba"><button aria-pressed="false" data-v="before">Original</button><button aria-pressed="true" data-v="after">Cleaned</button></div><button class="btn" id="sample"><svg class="ic fill"><use href="/static/assets/icons.svg#play"/></svg><span id="sampleText">Listen</span></button></div>
+          <p class="sub" id="loudness" style="margin:var(--space-3) 0 0"></p>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="line"><span>Show my name in the corner</span><button class="switch" role="switch" aria-checked="true" id="nameSwitch" aria-label="Show my name"></button></div>
+        
+      </div>
+    </div>
+  </aside>
+</main>
+
+<section class="timeline" aria-label="Timeline">
+  <div class="tbar">
+    <button class="btn" id="splitBtn" title="Split the clip at the playhead"><svg class="ic"><use href="/static/assets/icons.svg#split"/></svg><span>Split</span></button>
+    <button class="btn" id="delBtn" title="Delete the selected part"><svg class="ic"><use href="/static/assets/icons.svg#trash-2"/></svg><span>Delete</span></button>
+    <span class="vsep"></span>
+    <a class="btn" id="recordMore" href="/record" title="Record another clip for this video"><svg class="ic"><use href="/static/assets/icons.svg#plus"/></svg><span>Record more</span></a>
+    <div class="legend"><span><i style="background:rgba(230,106,99,.5);box-shadow:inset 0 0 0 1px var(--record)"></i>Cut</span><span><i style="background:rgba(171,140,240,.25);box-shadow:inset 0 0 0 1px var(--purple-soft)"></i>Possible mistake</span></div>
+    </div>
+  <div class="tgrid">
+    <div class="tlabels">
+      <div class="h-video" style="margin-bottom:4px">Video</div>
+            <div class="h-thin">Captions</div>
+    </div>
+    <div class="tracks" id="tracks">
+      <div class="ruler" id="ruler"></div>
+      <div class="track h-video" id="clipTrack">
+        </div>
+      <div class="track h-thin"><div class="capchips" id="capchips"></div></div>
+      <div class="playhead" id="playhead" style="left:0"></div>
+    </div>
+  </div>
+</section>
+
+<button class="selcut" id="selcut"><svg class="ic"><use href="/static/assets/icons.svg#scissors"/></svg>Cut</button>
+
+<div class="scrim" id="export" hidden>
+  <div class="dialog" role="dialog" aria-labelledby="exTitle">
+    <div class="dh"><h2 id="exTitle">Export video</h2><button class="iconbtn" id="exClose" aria-label="Close"><svg class="ic"><use href="/static/assets/icons.svg#x"/></svg></button></div>
+    <div class="two">
+      <div class="field"><span class="label">Quality</span><select class="select" id="quality"><option value="1080">HD (1080p)</option><option value="720">Small file (720p)</option></select></div>
+      <div class="field"><span class="label">Captions</span><select class="select" id="capMode"><option value="burn">On the video</option><option value="file">As a separate file</option><option value="none">No captions</option></select></div>
+    </div>
+    <div class="big">
+      <button class="btn primary" id="dl"><svg class="ic"><use href="/static/assets/icons.svg#download"/></svg><span id="dlText">Download video</span></button>
+      <div class="progress" id="prog" hidden><i id="progBar"></i></div>
+      <small id="dlNote"></small>
+    </div>
+    <div class="notice err" id="exFail" hidden><span class="dot"></span><span class="grow"><b>The export stopped before it finished.</b> Your edits are safe. Try again, or pick a smaller quality.</span></div>
+    </div>
+</div>
+
+<div class="notice warn floatnote" id="offline" hidden><span class="dot"></span><span class="grow">You're offline. Your edits are saved on this computer and will sync when you're back online.</span></div>
+
+<div class="toast" id="toast" hidden><span id="toastText"></span><button id="toastUndo">Undo</button></div>
+
+<script src="/static/js/edit.js"></script>
+</body>
+</html>

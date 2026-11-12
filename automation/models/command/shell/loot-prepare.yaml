@@ -1,0 +1,20 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: 307c1fc1-101a-44d0-8750-7a3185dae7c0
+name: loot-prepare
+version: 1
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+  required: ["project"]
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine prepare ${{ inputs.project }}'
+      workingDir: "/app"
+      timeout: 7200000

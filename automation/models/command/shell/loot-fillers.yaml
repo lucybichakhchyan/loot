@@ -1,0 +1,20 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: fc44fbdf-e8c5-4ba2-a6ca-67d3c6686d04
+name: loot-fillers
+version: 1
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+  required: ["project"]
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine fillers ${{ inputs.project }}'
+      workingDir: "/app"
+      timeout: 60000

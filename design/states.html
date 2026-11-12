@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Other moments · LOOT mockups</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  .wrap{max-width:860px;margin:0 auto;padding:var(--space-7) var(--space-5) var(--space-9)}
+  h1{font-size:24px;line-height:32px;margin:0}
+  .intro{color:var(--fg-muted);margin:8px 0 var(--space-6);max-width:620px}
+  h2{font-size:var(--fs-md);font-weight:600;margin:var(--space-6) 0 var(--space-2)}
+  .rows{background:var(--surface);border-radius:10px;overflow:hidden}
+  .r{display:grid;grid-template-columns:220px minmax(0,1fr);gap:var(--space-4);padding:12px var(--space-4);border-top:1px solid var(--line);align-items:baseline;color:inherit}
+  .r:first-child{border-top:0}
+  .r:hover{background:var(--surface-2);text-decoration:none}
+  .r b{font-weight:500;color:var(--purple-soft)}
+  .r span{font-size:var(--fs-sm);color:var(--fg-muted)}
+  @media (max-width:560px){.r{grid-template-columns:1fr;gap:2px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="back" href="index.html"><svg class="ic"><use href="assets/icons.svg#arrow-left"/></svg>Your videos</a>
+  <span class="sep"></span>
+  <span class="doc-title" style="border-color:transparent">Other moments</span>
+</header>
+<main class="wrap">
+  <h1>Other moments in the app</h1>
+  <p class="intro">This page is only for reviewing the mockups. Each link opens a screen at a moment that the normal mockup doesn't show, such as waiting, an empty page or something going wrong.</p>
+
+  <h2>Home</h2>
+  <div class="rows">
+    <a class="r" href="index.html?state=empty"><b>No videos yet</b><span>The first time you open LOOT, before anything is recorded.</span></a>
+    <a class="r" href="index.html?state=full"><b>Server out of space</b><span>Finished videos are waiting on the server and there is no room for new ones.</span></a>
+  </div>
+
+  <h2>Recorder</h2>
+  <div class="rows">
+    <a class="r" href="recorder.html?state=permission"><b>Permission not given yet</b><span>The browser hasn't been asked for the camera and microphone.</span></a>
+    <a class="r" href="recorder.html?state=blocked"><b>Permission blocked</b><span>The browser is set to refuse the camera and microphone.</span></a>
+    <a class="r" href="recorder.html?state=nomic"><b>No sound from the microphone</b><span>The chosen microphone is silent before you start.</span></a>
+    <a class="r" href="recorder.html?state=uploadfail"><b>A clip didn't upload</b><span>The connection dropped while a clip was being sent to the server.</span></a>
+  </div>
+
+  <h2>Editor</h2>
+  <div class="rows">
+    <a class="r" href="editor.html?state=processing"><b>Transcript being written</b><span>Right after recording, while the server makes the transcript.</span></a>
+    <a class="r" href="editor.html?state=notranscript"><b>Transcript failed</b><span>The transcript couldn't be made.</span></a>
+    <a class="r" href="editor.html?state=exporting"><b>Export in progress</b><span>The video is being prepared for download.</span></a>
+    <a class="r" href="editor.html?state=exportfail"><b>Export failed</b><span>The export stopped before it finished.</span></a>
+    <a class="r" href="editor.html?state=offline"><b>Offline</b><span>The internet connection dropped while editing.</span></a>
+  </div>
+
+  <h2>Shared link</h2>
+  <div class="rows">
+    <a class="r" href="watch.html"><b>The viewer's page</b><span>What someone sees when you send them a link.</span></a>
+  </div>
+</main>
+</body>
+</html>

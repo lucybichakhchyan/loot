@@ -1,0 +1,20 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: b42f8735-d14a-4003-bb0b-daf96254c61e
+name: loot-assemble
+version: 1
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+  required: ["project"]
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine assemble ${{ inputs.project }}'
+      workingDir: "/app"
+      timeout: 1800000

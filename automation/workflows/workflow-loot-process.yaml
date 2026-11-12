@@ -1,0 +1,85 @@
+id: 46593efb-d247-49b7-9fab-ec5eaed65bfb
+name: loot-process
+description: Get a recording ready for the editor by joining its prepared clips, then marking silences, filler words and suggested cuts. Only the last step uses Claude
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+  required: ["project"]
+jobs:
+  - name: process
+    description: Clips are prepared when they upload, so this mostly joins them; a failed step reruns alone
+    steps:
+      - name: prepare
+        description: Prepares any clip that was not prepared at upload (steady 30 fps video, cleaned sound, word-timed transcript); skips clips already done; no tokens
+        task:
+          type: behavior
+          behavior: loot-prepare
+          methodName: execute
+          inputs:
+            project: ${{ inputs.project }}
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+      - name: assemble
+        description: Joins the clips into one timeline without re-encoding, and merges their transcripts; no tokens
+        task:
+          type: behavior
+          behavior: loot-assemble
+          methodName: execute
+          inputs:
+            project: ${{ inputs.project }}
+        dependsOn:
+          - step: prepare
+            condition:
+              type: succeeded
+        weight: 0
+        allowFailure: false
+      - name: silences
+        description: Finds pauses longer than 0.6 seconds from the gaps between words; no tokens
+        task:
+          type: behavior
+          behavior: loot-silences
+          methodName: execute
+          inputs:
+            project: ${{ inputs.project }}
+        dependsOn:
+          - step: assemble
+            condition:
+              type: succeeded
+        weight: 0
+        allowFailure: false
+      - name: fillers
+        description: Marks filler words from a word list; no tokens
+        task:
+          type: behavior
+          behavior: loot-fillers
+          methodName: execute
+          inputs:
+            project: ${{ inputs.project }}
+        dependsOn:
+          - step: assemble
+            condition:
+              type: succeeded
+        weight: 0
+        allowFailure: false
+      - name: cuts
+        description: Claude reads the transcript text and suggests cuts; code checks every cut against the word timings and reuses a saved answer when the transcript is unchanged
+        task:
+          type: behavior
+          behavior: loot-cuts
+          methodName: execute
+          inputs:
+            project: ${{ inputs.project }}
+        dependsOn:
+          - step: assemble
+            condition:
+              type: succeeded
+        weight: 0
+        allowFailure: true
+    dependsOn: []
+    weight: 0
+version: 1

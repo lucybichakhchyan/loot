@@ -1,0 +1,20 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: 3b4ca025-a741-4e0b-b994-1e0071e31884
+name: loot-silences
+version: 1
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+  required: ["project"]
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine silences ${{ inputs.project }}'
+      workingDir: "/app"
+      timeout: 300000

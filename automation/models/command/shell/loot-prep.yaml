@@ -1,0 +1,24 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: 24358915-2ff3-4dbe-874c-b7a624ef04a7
+name: loot-prep
+version: 1
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+    clip:
+      type: string
+      pattern: "^[a-z0-9]{8}$"
+      description: LOOT clip id
+  required: ["project", "clip"]
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine prep ${{ inputs.project }} ${{ inputs.clip }}'
+      workingDir: "/app"
+      timeout: 7200000

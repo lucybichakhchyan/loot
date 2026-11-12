@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LOOT</title>
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  .wrap{max-width:1320px;margin:0 auto;padding:var(--space-7) var(--space-6) var(--space-9)}
+  .head{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-5);flex-wrap:wrap}
+  .head h1{font-size:24px;line-height:32px;margin:0;font-weight:600}
+  .head .upload{margin-left:auto}
+  .record{height:44px;padding:0 20px 0 16px;font-size:15px;gap:10px}
+  .record i{width:12px;height:12px;border-radius:50%;background:var(--record);display:block}
+  .filters{display:inline-flex;margin-bottom:var(--space-5)}
+  .filters button{padding:6px 14px;font-size:var(--fs-sm)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--space-6) var(--space-5)}
+  .card{display:flex;flex-direction:column;gap:10px;color:inherit;text-decoration:none;min-width:0}
+  .card:hover{text-decoration:none}
+  .thumb{position:relative;border-radius:8px;overflow:hidden;background:var(--stage)}
+  .thumb .frame{border-radius:0}
+  .thumb .frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .thumb .frame.vert img{object-fit:contain}
+  .thumb::after{content:"";position:absolute;inset:0;border-radius:8px;box-shadow:inset 0 0 0 1px var(--line);pointer-events:none;transition:box-shadow var(--dur-fast) var(--ease)}
+  .card:hover .thumb::after,.card:focus-visible .thumb::after{box-shadow:inset 0 0 0 2px var(--purple-soft)}
+  .card:focus-visible{box-shadow:none}
+  .playover{position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,17,24,.35);opacity:0;transition:opacity var(--dur-fast) var(--ease);z-index:3}
+  .playover span{width:44px;height:44px;border-radius:50%;background:rgba(246,246,244,.94);color:#1A1620;display:grid;place-items:center}
+  .playover .ic{width:18px;height:18px;margin-left:2px}
+  .card:hover .playover{opacity:1}
+  .dur{position:absolute;right:8px;bottom:8px;background:rgba(20,17,24,.88);font-size:var(--fs-xs);font-variant-numeric:tabular-nums;padding:2px 6px;border-radius:4px;z-index:4}
+  .state{position:absolute;left:8px;top:8px;z-index:4;display:inline-flex;align-items:center;gap:6px;background:rgba(20,17,24,.9);font-size:var(--fs-xs);line-height:22px;padding:0 8px;border-radius:4px}
+  .bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(246,246,244,.15);z-index:4}
+  .bar i{display:block;height:100%;background:var(--warn);transition:width .6s var(--ease)}
+  .info{display:flex;gap:var(--space-2);align-items:flex-start}
+  .info .t{font-size:var(--fs-md);line-height:var(--lh-md);font-weight:var(--fw-medium);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .info .m{font-size:var(--fs-xs);color:var(--fg-muted);margin-top:3px}
+  .info .iconbtn{margin-left:auto;margin-top:-4px}
+  .info .iconbtn.todo{color:var(--warn)}
+  @media (max-width:560px){
+    .wrap{padding:var(--space-5) var(--space-4) var(--space-8)}
+    .head .upload{margin-left:0}
+    .record{width:100%;justify-content:center}
+    .grid{grid-template-columns:1fr 1fr;gap:var(--space-5) var(--space-3)}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="wordmark" href="/">LOOT</a>
+  <div class="right">
+    <form method="post" action="/logout"><button class="btn quiet">Sign out</button></form>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="head">
+    <h1 class="page-title">Your videos</h1>
+    <label class="btn quiet upload" id="uploadLbl"><svg class="ic"><use href="/static/assets/icons.svg#plus"/></svg><span id="uploadText">Upload a video</span><input type="file" id="uploadFile" accept="video/*" hidden></label>
+    <a class="btn primary record" href="/record"><i></i>Record a video</a>
+  </div>
+
+  <div class="seg filters" id="filters" role="group" aria-label="Show">
+    <button aria-pressed="true" data-f="all">All</button>
+    <button aria-pressed="false" data-f="video">Videos</button>
+    <button aria-pressed="false" data-f="short">Shorts</button>
+    <button aria-pressed="false" data-f="message">Messages</button>
+  </div>
+
+  <div class="notice err" id="fullNotice" hidden style="margin-bottom:var(--space-5)">
+    <span class="dot"></span>
+    <span class="grow"><b>The server is almost out of space.</b> Download your finished videos so LOOT can clear them from the server.</span>
+  </div>
+  <div class="notice err" id="loadFail" hidden style="margin-bottom:var(--space-5)">
+    <span class="dot"></span><span class="grow">Your videos couldn't be loaded. Check your connection and reload the page.</span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" hidden>
+    <span class="badge"><svg class="ic"><use href="/static/assets/icons.svg#video"/></svg></span>
+    <h2>No videos yet</h2>
+    <p>Record your first one and it will show up here.</p>
+    <a class="btn primary lg" href="/record">Record a video</a>
+  </div>
+</main>
+
+<div class="toast" id="toast" hidden><span id="toastText"></span></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const ic=n=>`<svg class="ic"><use href="/static/assets/icons.svg#${n}"/></svg>`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>s==null?'':Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+const group={long:'video',demo:'video',short:'short',msg:'message'};
+const label={video:'Video',short:'Short',message:'Message'};
+function when(ts){if(!ts)return '';const d=new Date(ts*1000),n=new Date();
+  if(d.toDateString()===n.toDateString())return 'Recorded today';
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
+function toast(text){const t=$('#toast');$('#toastText').textContent=text;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3000);}
+
+let items=[],filter='all',timer;
+function render(){
+  const grid=$('#grid');grid.innerHTML='';
+  const shown=items.filter(i=>filter==='all'||group[i.kind]===filter);
+  $('#empty').hidden=items.length>0;$('#filters').style.display=items.length?'':'none';
+  shown.forEach(i=>{
+    const busy=i.state==='queued'||i.state==='processing';
+    const unfinished=i.state==='recording';
+    const a=document.createElement('a');a.className='card';a.href=unfinished?`/record?project=${i.id}`:`/edit/${i.id}`;
+    let state='';
+    if(busy)state=`<span class="state"><span class="dot st-warn"></span>Processing, ${i.progress||0}%</span>`;
+    else if(i.state==='failed')state=`<span class="state"><span class="dot st-rec"></span>Couldn't be processed</span>`;
+    else if(unfinished)state=`<span class="state"><span class="dot st-muted"></span>Not finished</span>`;
+    else if(i.media_deleted)state=`<span class="state"><span class="dot st-muted"></span>Cleared from the server</span>`;
+    else if(i.exported&&!i.downloaded)state=`<span class="state"><span class="dot st-warn"></span>Not downloaded yet</span>`;
+    const img=i.thumb?`<img src="/api/projects/${i.id}/media/thumb.jpg?v=${Math.round(i.updated_at||0)}" alt="">`:'';
+    a.innerHTML=`<div class="thumb"><div class="frame${i.kind==='short'?' vert':''}">${img}</div>${state}
+      <span class="playover"><span>${ic('play')}</span></span>${i.duration?`<span class="dur">${fmt(i.duration)}</span>`:''}
+      ${busy?`<span class="bar"><i style="width:${i.progress||0}%"></i></span>`:''}</div>
+    <div class="info"><div><div class="t">${esc(i.title)}</div><div class="m">${label[group[i.kind]]} · ${when(i.created_at)}</div></div>
+      ${i.exported?`<button class="iconbtn ${i.downloaded?'':'todo'}" title="Download to my drive" aria-label="Download ${esc(i.title)}" data-dl="${i.id}">${ic('download')}</button>`:''}</div>`;
+    grid.appendChild(a);
+  });
+}
+async function load(){
+  try{
+    const r=await fetch('/api/projects');if(r.status===401)return location.href='/login';
+    const j=await r.json();items=j.projects;$('#fullNotice').hidden=!j.disk_full;$('#loadFail').hidden=true;render();
+    clearTimeout(timer);if(items.some(i=>i.state==='queued'||i.state==='processing'))timer=setTimeout(load,4000);
+  }catch(e){$('#loadFail').hidden=false;}
+}
+$('#filters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#filters button').forEach(x=>x.setAttribute('aria-pressed',x===b));filter=b.dataset.f;render();});
+$('#grid').addEventListener('click',e=>{const d=e.target.closest('[data-dl]');if(!d)return;e.preventDefault();
+  location.href=`/api/projects/${d.dataset.dl}/download/video`;toast('Downloading to your drive');setTimeout(load,1500);});
+$('#uploadFile').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f)return;const fd=new FormData();fd.append('file',f);
+  $('#uploadText').textContent='Uploading…';
+  try{const r=await fetch('/api/projects/upload',{method:'POST',body:fd});
+    if(!r.ok)throw new Error((await r.json()).detail||'The upload failed.');toast('Uploaded. LOOT is processing it now.');}
+  catch(err){toast(err.message);}
+  $('#uploadText').textContent='Upload a video';e.target.value='';load();});
+load();
+</script>
+</body>
+</html>

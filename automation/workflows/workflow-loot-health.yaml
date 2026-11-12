@@ -1,0 +1,20 @@
+id: fc453249-d04a-4634-aa91-b10e8af03d70
+name: loot-health
+description: Every morning, check that FFmpeg, the noise remover and Whisper work, and back up the project records; no Claude and no tokens
+tags: {}
+jobs:
+  - name: health
+    description: Runs a short test recording through the engine and saves a backup
+    steps:
+      - name: check
+        description: Checks each tool on a 3 second test clip, backs up project records and writes data/reports/health.json
+        task:
+          type: behavior
+          behavior: loot-health
+          methodName: execute
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn: []
+    weight: 0
+version: 1

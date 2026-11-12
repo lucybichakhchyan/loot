@@ -1,0 +1,13 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: a23b9146-2e56-4c4b-9009-656ea03a2286
+name: loot-health
+version: 1
+tags: {}
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine health'
+      workingDir: "/app"
+      timeout: 600000

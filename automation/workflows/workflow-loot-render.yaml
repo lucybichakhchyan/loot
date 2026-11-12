@@ -1,0 +1,29 @@
+id: b7916494-b2a0-43ea-9334-180a46546f69
+name: loot-render
+description: Export one video as an MP4 with the cuts, layout and captions applied; no Claude and no tokens
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+  required: ["project"]
+jobs:
+  - name: export
+    description: FFmpeg applies the cuts, lays out camera and screen, burns in captions and checks loudness
+    steps:
+      - name: render
+        description: Writes exports/export.mp4 and captions.srt, and records progress in exports/export.json
+        task:
+          type: behavior
+          behavior: loot-render
+          methodName: execute
+          inputs:
+            project: ${{ inputs.project }}
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn: []
+    weight: 0
+version: 1

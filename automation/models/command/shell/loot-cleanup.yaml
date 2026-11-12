@@ -1,0 +1,13 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: 83a7056a-b189-44af-a7f0-edf1dfadf257
+name: loot-cleanup
+version: 1
+tags: {}
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine cleanup'
+      workingDir: "/app"
+      timeout: 600000

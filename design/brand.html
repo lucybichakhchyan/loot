@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brand settings · LOOT</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  body{height:100vh;display:grid;grid-template-rows:var(--topbar-h) minmax(0,1fr);overflow:hidden}
+  .main{display:grid;grid-template-columns:minmax(0,1fr) 420px;min-height:0}
+
+  /* Preview */
+  .viewer{background:var(--stage);display:flex;flex-direction:column;min-width:0;min-height:0;align-items:center;padding:var(--space-4) var(--space-5) var(--space-5);gap:var(--space-3)}
+  .modes{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;justify-content:center}
+  .modes .seg button{padding:6px 12px;font-size:var(--fs-sm)}
+  .modes .xs{color:var(--fg-muted)}
+  .pv{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;container-type:size;--bgc:radial-gradient(120% 90% at 80% 10%,#3a2a55 0%,#1d1626 45%,#141118 100%);--acc:#AB8CF0;--hf:"Playfair Display",serif;--hstyle:italic;--hweight:600}
+  .pv .frame{width:min(100cqw,calc(100cqh * 16 / 9));border-radius:10px;background:var(--bgc)}
+  .pv .frame.vertical{aspect-ratio:9/16;width:min(100cqw,calc(100cqh * 9 / 16))}
+  .frame.vertical .shot{inset:22% 6% 40% 6%}
+  .frame.vertical .cam{width:52%;right:24%;bottom:12%}
+  .frame.vertical .cap{bottom:5%;font-size:clamp(11px,3.4cqh,22px)}
+  .frame.vertical .mark{font-size:clamp(9px,2.4cqh,16px)}
+  .pv .mark{font-family:var(--hf);font-style:var(--hstyle);font-weight:var(--hweight)}
+  .pv .cap em{font-family:var(--hf);font-style:var(--hstyle);font-weight:var(--hweight);color:var(--acc)}
+  .pv .cap.plain em,.pv .cap.noword em{font:inherit;color:inherit;font-style:normal}
+  .pv .cap.boxed em{color:var(--acc)}
+  .pv [hidden]{display:none}
+  .card{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:3cqh;padding:0 9%;color:#fff}
+  .card small{font-size:clamp(10px,2.2cqh,16px);opacity:.7}
+  .card b{font-family:var(--hf);font-style:var(--hstyle);font-weight:var(--hweight);font-size:clamp(20px,8cqh,64px);line-height:1.04;letter-spacing:-.6px;max-width:16em}
+  .card i{display:block;width:12%;height:2px;background:var(--acc)}
+  .card span{font-size:clamp(10px,2.4cqh,18px)}
+  .light .card,.light .mark{color:#1A1A1A}
+  .pagewrap{width:min(100cqw,calc(100cqh * 4 / 3));aspect-ratio:4/3;border-radius:10px;overflow:hidden;position:relative;box-shadow:0 0 0 1px var(--line)}
+  .pagewrap iframe{position:absolute;left:0;top:0;width:1100px;height:825px;border:0;transform-origin:0 0}
+
+  /* Settings */
+  .panel{background:var(--surface);border-left:1px solid var(--line);overflow:auto;padding:var(--space-4);min-width:0}
+  .swrow{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-2);font-size:var(--fs-sm)}
+  .swrow + .swatches{margin-bottom:var(--space-4)}
+  .sw.add{background:transparent;border:1px dashed var(--control-border);color:var(--fg-muted);font-size:18px;display:grid;place-items:center}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);align-items:end}
+  .logo{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)}
+  .logo img{width:48px;height:48px;border-radius:50%;background:var(--surface-2)}
+  .logo .btn{margin-left:auto}
+  .sec .field + .field,.sec .line + .field,.sec .field + .line{margin-top:var(--space-3)}
+  .tile .cap{font-size:9px}
+
+  @media (max-width:900px){
+    .main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(170px,36vh) minmax(0,1fr)}
+    .panel{border-left:0;border-top:1px solid var(--line)}
+    .viewer{padding:var(--space-3)}
+    .modes .xs,.saved{display:none}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="back" href="index.html"><svg class="ic"><use href="assets/icons.svg#arrow-left"/></svg>Your videos</a>
+  <span class="sep"></span>
+  <span class="doc-title" style="border-color:transparent">Brand settings</span>
+  <div class="right"><span class="saved">Changes save on their own and apply to new videos</span></div>
+</header>
+
+<main class="main">
+  <section class="viewer" aria-label="Preview">
+    <div class="modes">
+      <div class="seg" id="modes" role="group" aria-label="Preview">
+        <button aria-pressed="true" data-m="video">Video</button>
+        <button aria-pressed="false" data-m="short">Short</button>
+        <button aria-pressed="false" data-m="card">Title card</button>
+        <button aria-pressed="false" data-m="page">Share page</button>
+      </div>
+      <span class="xs" id="modeNote">How a wide video looks with your brand</span>
+    </div>
+    <div class="pv" id="pv">
+      <div class="frame" id="frame" data-layout="bubble">
+        <div class="shot" id="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div><div class="row"></div><div class="row"></div></div></div></div>
+        <div class="cam" id="cam"><img src="assets/avatar-256.png" alt=""></div>
+        <div class="mark" id="mark">Lucy Bichakhchyan</div>
+        <div class="cap" id="cap">write down <em>one</em> question</div>
+        <div class="card" id="card" hidden><small>12 November 2026</small><b>How I plan a paid media test on a small budget</b><i></i><span id="cardName">Lucy Bichakhchyan</span></div>
+      </div>
+      <div class="pagewrap" id="pagewrap" hidden><iframe id="page" title="Share page preview" src="about:blank"></iframe></div>
+    </div>
+  </section>
+
+  <aside class="panel" aria-label="Brand settings">
+    <div class="sec">
+      <div class="sech"><h3>Colors</h3></div>
+      <div class="swrow"><span>Video background</span></div>
+      <div class="swatches" id="bgs">
+        <button class="sw" aria-pressed="true" aria-label="Violet glow" data-v="radial-gradient(120% 90% at 80% 10%,#3a2a55 0%,#1d1626 45%,#141118 100%)" style="background:radial-gradient(120% 90% at 80% 10%,#3a2a55,#141118)"></button>
+        <button class="sw" aria-pressed="false" aria-label="Charcoal" data-v="#1A1A1A" style="background:#1A1A1A"></button>
+        <button class="sw" aria-pressed="false" aria-label="Deep purple" data-v="#2D253A" style="background:#2D253A"></button>
+        <button class="sw" aria-pressed="false" aria-label="Bright purple" data-v="#8A2BE2" style="background:#8A2BE2"></button>
+        <button class="sw" aria-pressed="false" aria-label="Off-white" data-v="#F6F6F4" data-light="1" style="background:#F6F6F4"></button>
+        <button class="sw add" aria-label="Add a color" title="Add a color">+</button>
+      </div>
+      <div class="swrow"><span>Highlighted word in captions</span></div>
+      <div class="swatches" id="accs" style="margin-bottom:0">
+        <button class="sw" aria-pressed="true" aria-label="Soft purple" data-v="#AB8CF0" style="background:#AB8CF0"></button>
+        <button class="sw" aria-pressed="false" aria-label="Bright purple" data-v="#8A2BE2" style="background:#8A2BE2"></button>
+        <button class="sw" aria-pressed="false" aria-label="Warm gold" data-v="#E2C184" style="background:#E2C184"></button>
+        <button class="sw" aria-pressed="false" aria-label="Off-white" data-v="#F6F6F4" style="background:#F6F6F4"></button>
+        <button class="sw add" aria-label="Add a color" title="Add a color">+</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sech"><h3>Fonts</h3></div>
+      <div class="two">
+        <div class="field"><label class="label" for="hfont">Headlines</label><select class="select" id="hfont"><option value="serif">Playfair italic</option><option value="sans">Inter bold</option></select></div>
+        <div class="field"><label class="label" for="bfont">Captions and text</label><select class="select" id="bfont"><option>Inter</option></select></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sech"><h3>Logo and name</h3></div>
+      <div class="logo"><img src="assets/avatar-256.png" alt="Your logo"><span class="xs muted">Shown on the share page and the title card</span><button class="btn outline">Replace</button></div>
+      <div class="field"><label class="label" for="name">Name</label><input class="input" id="name" value="Lucy Bichakhchyan"></div>
+      <div class="line"><span>Show my name in the corner of videos</span><button class="switch" role="switch" aria-checked="true" id="nameSwitch" aria-label="Show my name in the corner"></button></div>
+    </div>
+
+    <div class="sec">
+      <div class="sech"><h3>Captions</h3></div>
+      <p class="sub">The style new videos start with. You can still change it for one video in the editor.</p>
+      <div class="tiles three" id="capStyles">
+        <button class="tile" aria-pressed="true" data-c=""><div class="frame" style="background:#2c2c2c"><div class="cap">one <em>question</em></div></div>Bold</button>
+        <button class="tile" aria-pressed="false" data-c="boxed"><div class="frame" style="background:#2c2c2c"><div class="cap boxed">one <em>question</em></div></div>Boxed</button>
+        <button class="tile" aria-pressed="false" data-c="plain"><div class="frame" style="background:#2c2c2c"><div class="cap plain">one question</div></div>Plain</button>
+      </div>
+      <div class="line" style="margin-top:var(--space-4)"><span>Highlight one word in each line</span><button class="switch" role="switch" aria-checked="true" id="wordSwitch" aria-label="Highlight one word"></button></div>
+    </div>
+
+    <div class="sec">
+      <div class="sech"><h3>Start and end of a video</h3></div>
+      <div class="line"><span>Start with a title card</span><button class="switch" role="switch" aria-checked="true" aria-label="Start with a title card"></button></div>
+      <div class="line"><span>End with a closing card</span><button class="switch" role="switch" aria-checked="false" id="endSwitch" aria-label="End with a closing card"></button></div>
+      <div class="field dim" id="endField"><label class="label" for="endText">Closing line</label><input class="input" id="endText" value="More at bichakhchyan.com"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sech"><h3>Share page</h3></div>
+      <p class="sub">The page people open when you send them a link.</p>
+      <div class="line"><span>Show a button under the video</span><button class="switch" role="switch" aria-checked="true" id="ctaSwitch" aria-label="Show a button under the video"></button></div>
+      <div id="ctaFields" style="margin-top:var(--space-3)">
+        <div class="two">
+          <div class="field"><label class="label" for="ctaText">Button text</label><input class="input" id="ctaText" value="Book a call"></div>
+          <div class="field"><label class="label" for="ctaLink">Button link</label><input class="input" id="ctaLink" value="bichakhchyan.com/contact"></div>
+        </div>
+        <div class="swrow" style="margin-top:var(--space-3)"><span>Button color</span></div>
+        <div class="swatches" id="btns" style="margin-bottom:0">
+          <button class="sw" aria-pressed="true" aria-label="Bright purple" data-v="#8A2BE2" style="background:#8A2BE2"></button>
+          <button class="sw" aria-pressed="false" aria-label="Soft purple" data-v="#AB8CF0" style="background:#AB8CF0"></button>
+          <button class="sw" aria-pressed="false" aria-label="Off-white" data-v="#F6F6F4" style="background:#F6F6F4"></button>
+          <button class="sw add" aria-label="Add a color" title="Add a color">+</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const pv=$('#pv'),frame=$('#frame');
+const isOn=id=>$(id).getAttribute('aria-checked')==='true';
+const S={mode:'video',cap:'',btn:'#8A2BE2'};
+const notes={video:'How a wide video looks with your brand',short:'How a vertical short looks',card:'The card a video can start with',page:'What people see when you share a link'};
+
+function pageUrl(){const p=new URLSearchParams({acc:S.btn,font:$('#hfont').value,cta:$('#ctaText').value,showcta:isOn('#ctaSwitch')?'1':'0',name:$('#name').value,compact:'1'});return 'watch.html?'+p;}
+function fitPage(){const w=$('#pagewrap').clientWidth;if(w)$('#page').style.transform='scale('+(w/1100)+')';}
+let pageTimer;function refreshPage(){clearTimeout(pageTimer);pageTimer=setTimeout(()=>{if(S.mode==='page'){$('#page').src=pageUrl();fitPage();}},250);}
+
+function apply(){
+  const m=S.mode,isCard=m==='card',isPage=m==='page';
+  frame.hidden=isPage;$('#pagewrap').hidden=!isPage;
+  frame.classList.toggle('vertical',m==='short');
+  $('#shot').hidden=$('#cam').hidden=$('#cap').hidden=isCard;$('#card').hidden=!isCard;
+  $('#mark').hidden=isCard||!isOn('#nameSwitch');
+  $('#mark').textContent=$('#cardName').textContent=$('#name').value;
+  $('#cap').className='cap '+S.cap+(isOn('#wordSwitch')?'':' noword');
+  $('#modeNote').textContent=notes[m];
+  refreshPage();
+}
+$('#modes').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#modes button').forEach(x=>x.setAttribute('aria-pressed',x===b));S.mode=b.dataset.m;apply();});
+function pick(group,fn){$(group).addEventListener('click',e=>{const s=e.target.closest('[data-v]');if(!s)return;$$(group+' .sw').forEach(x=>x.setAttribute('aria-pressed',x===s));fn(s);apply();});}
+pick('#bgs',s=>{pv.style.setProperty('--bgc',s.dataset.v);frame.classList.toggle('light',!!s.dataset.light);});
+pick('#accs',s=>{pv.style.setProperty('--acc',s.dataset.v);});
+pick('#btns',s=>{S.btn=s.dataset.v;});
+$('#hfont').onchange=e=>{const sans=e.target.value==='sans';pv.style.setProperty('--hf',sans?'"Inter",sans-serif':'"Playfair Display",serif');pv.style.setProperty('--hstyle',sans?'normal':'italic');pv.style.setProperty('--hweight',sans?'700':'600');apply();};
+$$('#capStyles .tile').forEach(o=>o.onclick=()=>{$$('#capStyles .tile').forEach(x=>x.setAttribute('aria-pressed',x===o));S.cap=o.dataset.c;apply();});
+$$('.switch').forEach(s=>s.addEventListener('click',()=>{s.setAttribute('aria-checked',s.getAttribute('aria-checked')!=='true');
+  $('#endField').classList.toggle('dim',!isOn('#endSwitch'));$('#ctaFields').classList.toggle('dim',!isOn('#ctaSwitch'));apply();}));
+['#name','#ctaText'].forEach(id=>$(id).addEventListener('input',apply));
+new ResizeObserver(fitPage).observe($('#pv'));
+apply();
+</script>
+</body>
+</html>

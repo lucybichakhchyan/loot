@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thanks for the introduction · Lucy Bichakhchyan</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  /* The page a viewer opens from a shared link. It carries Lucy's own brand
+     (near-black, off-white, Playfair italic, 2px corners), not the app's look.
+     Colors, headline font and the button come from Brand settings. */
+  :root{--page:#1A1A1A;--ink:#F6F6F4;--ink-muted:rgba(246,246,244,.62);--hair:rgba(246,246,244,.18);--acc:#8A2BE2;--hf:"Playfair Display",ui-serif,Georgia,serif;--hstyle:italic;--hweight:600}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--page);color:var(--ink);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;display:block}
+  .ic.fill{fill:currentColor}
+
+  .top{display:flex;align-items:center;gap:12px;max-width:1000px;margin:0 auto;padding:20px 24px}
+  .top img{width:36px;height:36px;border-radius:50%;background:#2D253A}
+  .top b{font-weight:500;font-size:15px}
+  main{max-width:1000px;margin:0 auto;padding:0 24px 72px}
+
+  .player{position:relative;aspect-ratio:16/9;border-radius:2px;overflow:hidden;background:radial-gradient(120% 90% at 80% 10%,#3a2a55 0%,#1d1626 45%,#141118 100%);box-shadow:0 0 0 1px var(--hair)}
+  .player .cam{position:absolute;inset:0;display:grid;place-items:center}
+  .player .cam img{height:92%;transform:translateY(6%)}
+  .bigplay{position:absolute;inset:0;margin:auto;width:76px;height:76px;border-radius:50%;border:0;background:var(--ink);color:#1A1A1A;display:grid;place-items:center;cursor:pointer;z-index:3;transition:transform 120ms}
+  .bigplay:hover{transform:scale(1.05)}
+  .bigplay .ic{width:26px;height:26px;margin-left:4px}
+  .playing .bigplay{display:none}
+  .caption{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);font-weight:700;font-size:clamp(14px,2.6vw,26px);color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6);white-space:nowrap;z-index:2;display:none}
+  .playing.cc .caption{display:block}
+  .controls{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;padding:28px 16px 12px;background:linear-gradient(transparent,rgba(0,0,0,.7));z-index:4}
+  .controls button{background:none;border:0;cursor:pointer;padding:6px;border-radius:2px;display:grid;place-items:center;font-size:13px;font-weight:500;min-width:32px;height:32px}
+  .controls button:hover{background:rgba(246,246,244,.14)}
+  .controls button[aria-pressed="true"]{color:#1A1A1A;background:var(--ink)}
+  .scrub{flex:1;height:4px;background:rgba(246,246,244,.28);border-radius:2px;position:relative;cursor:pointer}
+  .scrub i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--acc);border-radius:2px}
+  .scrub i::after{content:"";position:absolute;right:-6px;top:-4px;width:12px;height:12px;border-radius:50%;background:var(--ink)}
+  .tm{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .about{padding-top:32px;max-width:720px}
+  .eyebrow{font-size:15px;color:var(--ink-muted);margin:0 0 10px}
+  .eyebrow::before{content:"( "}.eyebrow::after{content:" )"}
+  h1{font-family:var(--hf);font-style:var(--hstyle);font-weight:var(--hweight);font-size:clamp(32px,5.4vw,52px);line-height:1.04;letter-spacing:-.8px;margin:0;color:#fff}
+  .meta{font-size:14px;color:var(--ink-muted);margin:14px 0 0}
+  .note{font-size:18px;line-height:28px;margin:20px 0 0}
+  .cta{display:inline-flex;align-items:center;height:48px;padding:0 24px;margin-top:28px;border-radius:2px;background:var(--acc);color:var(--on-acc,#fff);font-size:16px;font-weight:500;text-decoration:none}
+  .cta:hover{filter:brightness(1.15)}
+  .cta[hidden]{display:none}
+  .compact .top,.compact main{max-width:780px}
+  .compact h1{font-size:40px}
+  .compact .about{padding-top:24px}
+  @media (max-width:560px){.top{padding:14px 16px}main{padding:0 16px 48px}.controls{gap:6px;padding:20px 8px 8px}.note{font-size:16px;line-height:25px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="assets/avatar-256.png" alt="">
+  <b id="who">Lucy Bichakhchyan</b>
+</header>
+
+<main>
+  <div class="player cc" id="player">
+    <div class="cam"><img src="assets/avatar-256.png" alt=""></div>
+    <div class="caption" id="caption">Thank you for the introduction</div>
+    <button class="bigplay" id="big" aria-label="Play video"><svg class="ic fill"><use href="assets/icons.svg#play"/></svg></button>
+    <div class="controls">
+      <button id="pp" aria-label="Play"><svg class="ic fill"><use href="assets/icons.svg#play"/></svg></button>
+      <div class="scrub" id="scrub" role="slider" aria-label="Position" aria-valuemin="0" aria-valuemax="65" aria-valuenow="0"><i id="bar"></i></div>
+      <span class="tm"><span id="cur">0:00</span> / 1:05</span>
+      <button id="speed" aria-label="Playback speed">1×</button>
+      <button id="cc" aria-pressed="true" aria-label="Captions"><svg class="ic"><use href="assets/icons.svg#captions"/></svg></button>
+      <button id="vol" aria-label="Mute"><svg class="ic"><use href="assets/icons.svg#volume-2"/></svg></button>
+    </div>
+  </div>
+
+  <section class="about">
+    <p class="eyebrow">video message</p>
+    <h1>Thanks for the introduction</h1>
+    <p class="meta">1 minute · 10 November 2026</p>
+    <p class="note">A short hello, and the two ideas I mentioned for the launch.</p>
+    <a class="cta" id="cta" href="#">Book a call</a>
+  </section>
+</main>
+
+<script>
+// Brand settings can pass choices in the address, so its preview shows them live.
+const q=new URLSearchParams(location.search),R=document.documentElement.style;
+if(q.get('acc')){const a=q.get('acc');R.setProperty('--acc',a);
+  // Dark text on a light button, white text on a dark one.
+  const m=/^#([0-9a-f]{6})$/i.exec(a);if(m){const n=parseInt(m[1],16),l=(0.299*(n>>16)+0.587*((n>>8)&255)+0.114*(n&255));if(l>150)R.setProperty('--on-acc','#1A1A1A');}}
+if(q.get('font')==='sans'){R.setProperty('--hf','"Inter",sans-serif');R.setProperty('--hstyle','normal');R.setProperty('--hweight','700');}
+if(q.get('cta'))document.getElementById('cta').textContent=q.get('cta');
+if(q.get('showcta')==='0')document.getElementById('cta').hidden=true;
+if(q.get('compact'))document.body.classList.add('compact');
+if(q.get('name'))document.getElementById('who').textContent=q.get('name');
+
+const P=document.getElementById('player'),TOTAL=65;let t=0,timer,rate=1;
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+const lines=['Thank you for the introduction','I looked at the launch plan','and I have two ideas','Happy to talk this week'];
+function show(){document.getElementById('cur').textContent=fmt(t);document.getElementById('bar').style.width=(t/TOTAL*100)+'%';document.getElementById('caption').textContent=lines[Math.floor(t/4)%lines.length];document.getElementById('scrub').setAttribute('aria-valuenow',Math.round(t));}
+function setPlay(on){P.classList.toggle('playing',on);document.querySelector('#pp use').setAttribute('href','assets/icons.svg#'+(on?'pause':'play'));document.getElementById('pp').setAttribute('aria-label',on?'Pause':'Play');clearInterval(timer);if(on)timer=setInterval(()=>{t+=rate;if(t>=TOTAL){t=0;setPlay(false);}show();},1000);}
+document.getElementById('big').onclick=()=>setPlay(true);
+document.getElementById('pp').onclick=()=>setPlay(!P.classList.contains('playing'));
+document.getElementById('cc').onclick=e=>{const b=e.currentTarget,on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);P.classList.toggle('cc',on);};
+document.getElementById('speed').onclick=e=>{rate=rate===1?1.5:rate===1.5?2:1;e.currentTarget.textContent=rate+'×';};
+document.getElementById('scrub').onclick=e=>{const r=e.currentTarget.getBoundingClientRect();t=(e.clientX-r.left)/r.width*TOTAL;show();};
+show();
+</script>
+</body>
+</html>

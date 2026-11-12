@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit · LOOT</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  body{height:100vh;display:grid;grid-template-rows:var(--topbar-h) minmax(0,1fr) auto;overflow:hidden}
+  .main{display:grid;grid-template-columns:minmax(0,1fr) 420px;min-height:0}
+
+  /* Video */
+  .viewer{background:var(--stage);display:flex;flex-direction:column;min-width:0;min-height:0}
+  .pv{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:var(--space-4) var(--space-5) 0;container-type:size}
+  .pv .frame{width:min(100cqw,calc(100cqh * 16 / 9));border-radius:10px}
+  .playbar{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5)}
+  .play{width:36px;height:36px;border-radius:50%;border:0;background:var(--fg);color:#1A1620;display:grid;place-items:center;cursor:pointer;flex:none}
+  .play:hover{background:var(--white)}
+  .play .ic{width:15px;height:15px}
+  .time{font-size:var(--fs-sm);font-variant-numeric:tabular-nums;color:var(--fg-muted);white-space:nowrap}
+  .time b{color:var(--fg);font-weight:500}
+  .playbar .select{width:64px;height:28px;font-size:var(--fs-xs);margin-left:auto}
+
+  /* Side panel with two tabs */
+  .panel{background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;min-width:0}
+  .ptabs{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin:var(--space-3) var(--space-4) 0;background:var(--surface-2);border-radius:8px;padding:3px}
+  .ptabs button{border:0;background:transparent;color:var(--fg-muted);font-size:var(--fs-md);font-weight:500;padding:7px 0;border-radius:6px;cursor:pointer}
+  .ptabs button:hover{color:var(--fg)}
+  .ptabs button[aria-selected="true"]{background:var(--purple-surface);color:var(--fg);box-shadow:inset 0 0 0 1px var(--purple-line)}
+  .pbody{flex:1;overflow:auto;padding:var(--space-4);position:relative}
+  .pbody[hidden]{display:none}
+
+  /* Transcript tab */
+  .found{display:flex;align-items:center;gap:var(--space-2);background:var(--purple-surface);box-shadow:inset 0 0 0 1px var(--purple-line);border-radius:8px;padding:8px 8px 8px 12px;font-size:var(--fs-sm);margin-bottom:var(--space-3)}
+  .found .ic{color:var(--purple-soft)}
+  .found span{flex:1;min-width:0}
+  .found[hidden]{display:none}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-4)}
+  .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--fg-muted);font-size:var(--fs-xs);padding:5px 10px 5px 8px;border-radius:999px;cursor:pointer}
+  .chip .ic{width:13px;height:13px;opacity:.25}
+  .chip[aria-pressed="true"]{background:var(--surface-2);color:var(--fg);border-color:transparent}
+  .chip[aria-pressed="true"] .ic{opacity:1;color:var(--ok)}
+  .tip{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-faint);margin:0 0 var(--space-4)}
+  .transcript{font-size:15px;line-height:26px;color:var(--fg)}
+  .para{display:grid;grid-template-columns:40px minmax(0,1fr);gap:var(--space-2);margin-bottom:var(--space-4)}
+  .para time{font-size:var(--fs-2xs);color:var(--fg-faint);font-variant-numeric:tabular-nums;padding-top:1px;user-select:none}
+  .para p{margin:0}
+  .s{cursor:pointer;border-radius:3px;padding:1px 0}
+  .s:hover{background:rgba(246,246,244,.06)}
+  .s.now{background:rgba(171,140,240,.14)}
+  .cutx{text-decoration:line-through;text-decoration-color:var(--record);color:var(--fg-faint);cursor:pointer}
+  .cutx:hover{color:var(--fg-muted);background:rgba(230,106,99,.12)}
+  .pause{font-size:var(--fs-2xs);color:var(--fg-faint);border:1px dashed var(--fg-faint);border-radius:4px;padding:1px 5px;white-space:nowrap}
+  .cutx.pause{border-color:var(--record)}
+  .sug{background:rgba(171,140,240,.2);box-shadow:inset 0 -2px 0 var(--purple-soft);cursor:pointer;border-radius:2px;padding:1px 0}
+  .sug.active{background:rgba(171,140,240,.36)}
+  .sugcard{display:flex;flex-direction:column;gap:8px;margin:6px 0 10px;padding:10px 12px;border-radius:8px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--purple-line);font-size:var(--fs-sm);line-height:var(--lh-sm)}
+  .sugcard[hidden]{display:none}
+  .sugcard .why{color:var(--fg-muted)}
+  .sugcard .acts{display:flex;gap:6px;align-items:center}
+  .sugcard .n{margin-left:auto;font-size:var(--fs-xs);color:var(--fg-faint)}
+  .selcut{position:fixed;z-index:35;display:none;align-items:center;gap:6px;height:32px;padding:0 12px;border:0;border-radius:8px;background:var(--fg);color:#1A1620;font-size:var(--fs-sm);font-weight:600;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  .selcut.show{display:inline-flex}
+
+  /* Style tab */
+  .sec{padding:var(--space-4) 0;border-top:1px solid var(--line)}
+  .sec:first-child{border-top:0;padding-top:0}
+  .sec h3{margin:0;font-size:var(--fs-md);line-height:var(--lh-md);font-weight:600}
+  .sech{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-3)}
+  .sec .sub{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-muted);margin:calc(var(--space-2) * -1) 0 var(--space-3)}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-2)}
+  .tiles.three{grid-template-columns:repeat(3,1fr)}
+  .tile{border:0;background:transparent;padding:0;cursor:pointer;text-align:center;color:var(--fg-muted);font-size:var(--fs-xs);display:flex;flex-direction:column;gap:6px}
+  .tile .frame{width:100%;border-radius:6px;pointer-events:none;box-shadow:0 0 0 1px var(--line)}
+  .tile .frame .cam{box-shadow:0 0 0 1px rgba(246,246,244,.9)}
+  .tile:hover .frame{box-shadow:0 0 0 1px var(--control-border)}
+  .tile[aria-pressed="true"]{color:var(--fg)}
+  .tile[aria-pressed="true"] .frame{box-shadow:0 0 0 2px var(--purple-soft)}
+  .tile .cap{font-size:8px;bottom:14%}
+  .swatches{display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .sw{width:40px;height:40px;border-radius:8px;border:1px solid var(--line);cursor:pointer;padding:0}
+  .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--purple-soft)}
+  .line{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--fs-sm)}
+  .line + .line{margin-top:var(--space-3)}
+  .dim{opacity:.4;pointer-events:none}
+  .compare{display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-3)}
+  .compare .seg{flex:1}
+  .wave{height:36px;display:flex;align-items:center;gap:2px;padding:0 8px;background:var(--surface-2);border-radius:6px;margin-top:var(--space-2)}
+  .wave i{flex:1;background:var(--waveform);border-radius:1px}
+  .wave.noisy i{background:rgba(246,246,244,.35)}
+
+  /* Timeline */
+  .timeline{background:var(--bg);border-top:1px solid var(--line);min-width:0}
+  .tbar{display:flex;align-items:center;gap:var(--space-1);padding:6px var(--space-3)}
+  .tbar .btn{background:transparent;color:var(--fg-muted);padding:0 10px}
+  .tbar .btn:hover{background:var(--surface-2);color:var(--fg)}
+  .tbar .vsep{width:1px;height:18px;background:var(--line);margin:0 var(--space-1)}
+  .tbar .zoomctl{margin-left:auto;display:flex;align-items:center;gap:var(--space-2);width:150px;color:var(--fg-faint)}
+  .tgrid{display:grid;grid-template-columns:76px minmax(0,1fr);padding-bottom:var(--space-2)}
+  .tlabels{padding-top:20px}
+  .tlabels div{display:flex;align-items:center;padding-left:var(--space-4);font-size:var(--fs-xs);color:var(--fg-muted)}
+  .tracks{position:relative;margin-right:var(--space-4);cursor:text}
+  .ruler{height:20px;position:relative}
+  .ruler span{position:absolute;top:3px;font-size:10px;color:var(--fg-faint);font-variant-numeric:tabular-nums;padding-left:4px;border-left:1px solid var(--line);height:14px;line-height:12px}
+  .track{position:relative;background:var(--surface);border-radius:6px;margin-bottom:4px}
+  .h-video{height:44px} .h-thin{height:26px}
+  .blk{position:absolute;top:0;bottom:0;border-radius:6px;font-size:var(--fs-2xs);white-space:nowrap;overflow:hidden;cursor:pointer;border:0;padding:0;color:inherit;text-align:left}
+  .blk.clip{background:var(--track-clip);box-shadow:inset 0 0 0 1px var(--track-clip-edge);display:flex;align-items:center;gap:1px;padding:0 5px}
+  .blk.clip b{position:absolute;left:8px;top:3px;font-weight:500;color:var(--fg);z-index:1}
+  .blk.clip i{flex:1;background:var(--waveform);border-radius:1px;opacity:.7;margin-top:12px}
+  .blk.clip.removed{opacity:.3}
+  .blk.zoom{background:var(--track-zoom);box-shadow:inset 0 0 0 1px var(--track-zoom-edge);color:var(--warn);padding:0 6px;line-height:26px;min-width:34px}
+  .blk.selected{box-shadow:inset 0 0 0 2px var(--fg)}
+  .capchips{position:absolute;inset:0;display:flex;gap:3px;overflow:hidden;align-items:center;padding:0 3px}
+  .capchips span{flex:none;font-size:10px;line-height:18px;padding:0 6px;border-radius:4px;background:var(--surface-2);color:var(--fg-muted);white-space:nowrap}
+  .mark{position:absolute;top:0;bottom:0;border-radius:2px;z-index:2;pointer-events:none}
+  .mark.cut{background:repeating-linear-gradient(135deg,rgba(230,106,99,.5) 0 3px,rgba(230,106,99,.15) 3px 6px);box-shadow:inset 0 0 0 1px var(--record)}
+  .mark.sugg{background:rgba(171,140,240,.25);box-shadow:inset 0 0 0 1px var(--purple-soft)}
+  .split{position:absolute;top:0;bottom:0;width:2px;background:var(--bg);z-index:3}
+  .playhead{position:absolute;top:0;bottom:4px;width:2px;margin-left:-1px;background:var(--fg);z-index:5;pointer-events:none;border-radius:1px}
+  .playhead::before{content:"";position:absolute;top:0;left:-4px;width:10px;height:10px;border-radius:3px 3px 6px 6px;background:var(--fg)}
+  .zpop{position:absolute;bottom:calc(100% - 12px);z-index:20;width:240px;background:var(--surface-2);border:1px solid var(--purple-line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 32px rgba(0,0,0,.45);cursor:default;font-size:var(--fs-sm)}
+  .zpop[hidden]{display:none}
+  .legend{display:flex;gap:var(--space-4);font-size:var(--fs-2xs);color:var(--fg-faint);margin-left:var(--space-3)}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:10px;height:10px;border-radius:2px;display:block}
+
+  /* Export dialog */
+  .big{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+  .big .btn{height:44px;font-size:15px}
+  .big small{font-size:var(--fs-xs);color:var(--fg-muted);text-align:center}
+  .progress{height:4px;background:var(--surface-3);border-radius:2px;overflow:hidden}
+  .progress i{display:block;height:100%;width:0;background:var(--purple-soft);transition:width 1.4s var(--ease)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+  .or{display:flex;align-items:center;gap:var(--space-3);font-size:var(--fs-xs);color:var(--fg-faint)}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  @media (max-width:900px){
+    .main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(150px,34vh) minmax(0,1fr)}
+    .panel{border-left:0;border-top:1px solid var(--line)}
+    .legend{display:none}
+    .hide-s{display:none}
+    .tgrid{grid-template-columns:60px minmax(0,1fr)}
+    .tlabels div{padding-left:var(--space-3)}
+    .h-video{height:36px} .h-thin{height:22px}
+    .blk.zoom{line-height:22px}
+    .pv{padding:var(--space-3) var(--space-3) 0}
+    .playbar{padding:var(--space-2) var(--space-3)}
+  }
+  @media (max-width:560px){
+    .tbar .btn span,.tbar .zoomctl{display:none}
+    .tiles{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="back" href="index.html"><svg class="ic"><use href="assets/icons.svg#arrow-left"/></svg><span class="hide-s">Your videos</span></a>
+  <span class="sep"></span>
+  <span class="doc-title" contenteditable="true" spellcheck="false" aria-label="Video title">How I plan a paid media test on a small budget</span>
+  <div class="right">
+    <span class="saved hide-s">Saved</span>
+    <button class="iconbtn" id="undo" title="Undo" aria-label="Undo"><svg class="ic"><use href="assets/icons.svg#undo-2"/></svg></button>
+    <button class="iconbtn" title="Redo" aria-label="Redo" disabled><svg class="ic"><use href="assets/icons.svg#redo-2"/></svg></button>
+    <a class="btn outline" href="shorts.html"><svg class="ic"><use href="assets/icons.svg#smartphone"/></svg>Make shorts</a>
+    <button class="btn primary" id="exportBtn"><svg class="ic"><use href="assets/icons.svg#download"/></svg>Export</button>
+  </div>
+</header>
+
+<main class="main">
+  <section class="viewer" aria-label="Video">
+    <div class="pv">
+      <div class="frame bg-brand" id="preview" data-layout="bubble">
+        <div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div><div class="row"></div><div class="row"></div><div class="row"></div></div></div></div>
+        <div class="cam"><img src="assets/avatar-256.png" alt=""></div>
+        <div class="mark-name mark" id="nameMark" style="position:absolute;inset:auto;left:3%;top:4%;pointer-events:none">Lucy Bichakhchyan</div>
+        <div class="cap" id="cap">write down <em>one</em> question</div>
+      </div>
+    </div>
+    <div class="playbar">
+      <button class="play" id="play" aria-label="Play"><svg class="ic fill"><use href="assets/icons.svg#play"/></svg></button>
+      <span class="time"><b id="tc">0:14</b> / <span id="total">12:40</span></span>
+      <select class="select" aria-label="Playback speed"><option>1×</option><option>1.5×</option><option>2×</option></select>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <div class="ptabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="transcript">Transcript</button>
+      <button role="tab" aria-selected="false" data-tab="style">Style</button>
+    </div>
+
+    <!-- TRANSCRIPT -->
+    <div class="pbody" id="tab-transcript">
+      <div class="empty" id="making" hidden>
+        <span class="spin" style="width:28px;height:28px"></span>
+        <h2>Writing the transcript</h2>
+        <p>About 1 minute left. You can watch the video and set the style while you wait.</p>
+        <div class="meter-bar"><i style="width:62%"></i></div>
+      </div>
+      <div class="empty" id="noTranscript" hidden>
+        <span class="badge" style="color:var(--record)"><svg class="ic"><use href="assets/icons.svg#scroll-text"/></svg></span>
+        <h2>The transcript couldn't be made</h2>
+        <p>The sound may be too quiet, or the server stopped partway. Your recording is safe.</p>
+        <a class="btn primary lg" href="editor.html?state=processing">Try again</a>
+        <p class="xs">You can still cut the video with Split and Delete on the timeline.</p>
+      </div>
+      <div id="transcriptReady">
+      <div class="found" id="found">
+        <svg class="ic"><use href="assets/icons.svg#sparkles"/></svg>
+        <span><b id="foundN">4</b> possible mistakes found</span>
+        <button class="btn sm" id="review">Review</button>
+        <button class="btn sm primary" id="cutAll">Cut all</button>
+      </div>
+      <div class="chips">
+        <button class="chip" aria-pressed="true"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Remove "um" and "uh"</button>
+        <button class="chip" aria-pressed="true"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Shorten long pauses</button>
+      </div>
+      <p class="tip">Select any words and choose Cut to remove that part of the video. Click a crossed-out part to bring it back.</p>
+
+      <div class="transcript" id="transcript">
+        <div class="para"><time>0:00</time><p>
+          <span class="cutx">Um,</span>
+          <span class="s" data-t="2">today I want to show you how I plan a paid media test when the budget is small.</span>
+          <span class="sug" data-s="1" data-secs="6">So the first thing, the first thing I do is</span>
+          <span class="sugcard" data-card="1" hidden><span class="why">You start this sentence twice. Cutting the first try keeps the clean one.</span><span class="acts"><button class="btn sm primary" data-cut="1">Cut it</button><button class="btn sm" data-keep="1">Keep it</button><span class="n">1 of 4</span></span></span>
+          <span class="s now" data-t="14">The first thing I do is write down one question the test has to answer.</span>
+        </p></div>
+        <div class="para"><time>0:22</time><p>
+          <span class="s" data-t="22">If you can't say the question in one sentence,</span>
+          <span class="cutx">like,</span>
+          <span class="s" data-t="27">the test is too big.</span>
+          <span class="s" data-t="31">I keep it to one channel and one audience.</span>
+        </p></div>
+        <div class="para"><time>4:10</time><p>
+          <span class="sug" data-s="2" data-secs="9">Okay so the budget. Wait, let me start that again.</span>
+          <span class="sugcard" data-card="2" hidden><span class="why">You stop and restart here. The next sentence says it cleanly.</span><span class="acts"><button class="btn sm primary" data-cut="2">Cut it</button><button class="btn sm" data-keep="2">Keep it</button><span class="n">2 of 4</span></span></span>
+          <span class="s" data-t="259">For the budget, I split it so that eighty percent goes to the test and twenty percent is held back.</span>
+          <span class="sug pause" data-s="3" data-secs="7">7 second pause</span>
+          <span class="sugcard" data-card="3" hidden><span class="why">A long silence while you switch windows.</span><span class="acts"><button class="btn sm primary" data-cut="3">Cut it</button><button class="btn sm" data-keep="3">Keep it</button><span class="n">3 of 4</span></span></span>
+          <span class="s" data-t="275">Here is the sheet I use to track spend each day.</span>
+        </p></div>
+        <div class="para"><time>8:52</time><p>
+          <span class="s" data-t="532">When the test ends, I look at cost per qualified lead, not clicks.</span>
+          <span class="sug" data-s="4" data-secs="9">Cost per qualified lead is the number that, cost per qualified lead tells you</span>
+          <span class="sugcard" data-card="4" hidden><span class="why">The same phrase twice. The second version finishes the sentence.</span><span class="acts"><button class="btn sm primary" data-cut="4">Cut it</button><button class="btn sm" data-keep="4">Keep it</button><span class="n">4 of 4</span></span></span>
+          <span class="s" data-t="549">whether the channel is worth more money.</span>
+        </p></div>
+      </div>
+    </div>
+    </div>
+
+    <!-- STYLE -->
+    <div class="pbody" id="tab-style" hidden>
+      <div class="sec">
+        <div class="sech"><h3>Camera and screen</h3></div>
+        <div class="tiles" id="layouts">
+          <button class="tile" aria-pressed="true" data-l="bubble"><div class="frame bg-brand" data-layout="bubble"><div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div><div class="cam"><img src="assets/avatar-256.png" alt=""></div></div>Bubble</button>
+          <button class="tile" aria-pressed="false" data-l="side"><div class="frame bg-brand" data-layout="side"><div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div><div class="cam"><img src="assets/avatar-256.png" alt=""></div></div>Side by side</button>
+          <button class="tile" aria-pressed="false" data-l="cam"><div class="frame bg-brand" data-layout="cam"><div class="shot"></div><div class="cam"><img src="assets/avatar-256.png" alt=""></div></div>Camera only</button>
+          <button class="tile" aria-pressed="false" data-l="screen"><div class="frame bg-brand" data-layout="screen"><div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div><div class="cam"></div></div>Screen only</button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sech"><h3>Captions</h3><button class="switch" role="switch" aria-checked="true" id="capSwitch" aria-label="Show captions"></button></div>
+        <div class="tiles three" id="capStyles">
+          <button class="tile" aria-pressed="true" data-c=""><div class="frame" style="background:#2c2c2c"><div class="cap">one <em>question</em></div></div>Bold</button>
+          <button class="tile" aria-pressed="false" data-c="boxed"><div class="frame" style="background:#2c2c2c"><div class="cap boxed">one <em>question</em></div></div>Boxed</button>
+          <button class="tile" aria-pressed="false" data-c="plain"><div class="frame" style="background:#2c2c2c"><div class="cap plain">one question</div></div>Plain</button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sech"><h3>Background</h3></div>
+        <div class="swatches" id="bgs">
+          <button class="sw" aria-pressed="true" aria-label="Violet glow" data-bg="radial-gradient(120% 90% at 80% 10%,#3a2a55 0%,#1d1626 45%,#141118 100%)" style="background:radial-gradient(120% 90% at 80% 10%,#3a2a55,#141118)"></button>
+          <button class="sw" aria-pressed="false" aria-label="Charcoal" data-bg="#1A1A1A" style="background:#1A1A1A"></button>
+          <button class="sw" aria-pressed="false" aria-label="Deep purple" data-bg="#2D253A" style="background:#2D253A"></button>
+          <button class="sw" aria-pressed="false" aria-label="Off-white" data-bg="#F6F6F4" style="background:#F6F6F4"></button>
+          <button class="sw" aria-pressed="false" aria-label="Bright purple" data-bg="#8A2BE2" style="background:#8A2BE2"></button>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sech"><h3>Zoom in on my clicks</h3><button class="switch" role="switch" aria-checked="true" id="zoomSwitch" aria-label="Zoom in on my clicks"></button></div>
+        <p class="sub">LOOT zooms in wherever you clicked while recording. To zoom somewhere else, use Add zoom above the timeline.</p>
+        <div class="seg" id="zoomAmt"><button aria-pressed="true">A little</button><button aria-pressed="false">Medium</button><button aria-pressed="false">A lot</button></div>
+      </div>
+
+      <div class="sec">
+        <div class="sech"><h3>Clean up the sound</h3><button class="switch" role="switch" aria-checked="true" id="soundSwitch" aria-label="Clean up the sound"></button></div>
+        <p class="sub">Removes background noise and evens out the volume. Your original recording is kept.</p>
+        <div id="soundBox">
+          <div class="compare"><div class="seg" id="ba"><button aria-pressed="false" data-v="before">Original</button><button aria-pressed="true" data-v="after">Cleaned</button></div><button class="btn" id="sample"><svg class="ic fill"><use href="assets/icons.svg#play"/></svg>Listen</button></div>
+          <div class="wave" id="wave"></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="line"><span>Show my name in the corner</span><button class="switch" role="switch" aria-checked="true" id="nameSwitch" aria-label="Show my name"></button></div>
+        <div class="line"><span class="muted">Colors, fonts and logo</span><a href="brand.html">Brand settings</a></div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<section class="timeline" aria-label="Timeline">
+  <div class="tbar">
+    <button class="btn" id="splitBtn" title="Split the clip at the playhead"><svg class="ic"><use href="assets/icons.svg#split"/></svg><span>Split</span></button>
+    <button class="btn" id="delBtn" title="Delete the selected part"><svg class="ic"><use href="assets/icons.svg#trash-2"/></svg><span>Delete</span></button>
+    <span class="vsep"></span>
+    <button class="btn" id="addZoom" title="Add a zoom at the playhead"><svg class="ic"><use href="assets/icons.svg#zoom-in"/></svg><span>Add zoom</span></button>
+    <a class="btn" href="recorder.html" title="Record another clip for this video"><svg class="ic"><use href="assets/icons.svg#plus"/></svg><span>Record more</span></a>
+    <div class="legend"><span><i style="background:rgba(230,106,99,.5);box-shadow:inset 0 0 0 1px var(--record)"></i>Cut</span><span><i style="background:rgba(171,140,240,.25);box-shadow:inset 0 0 0 1px var(--purple-soft)"></i>Possible mistake</span></div>
+    <div class="zoomctl"><svg class="ic"><use href="assets/icons.svg#search"/></svg><input type="range" value="30" style="--val:30%" aria-label="Timeline zoom"></div>
+  </div>
+  <div class="tgrid">
+    <div class="tlabels">
+      <div class="h-video" style="margin-bottom:4px">Video</div>
+      <div class="h-thin" style="margin-bottom:4px">Zoom</div>
+      <div class="h-thin">Captions</div>
+    </div>
+    <div class="tracks" id="tracks">
+      <div class="ruler" id="ruler"></div>
+      <div class="track h-video" id="clipTrack">
+        <button class="blk clip" style="left:0%;width:32.7%"><b>Clip 1</b></button>
+        <button class="blk clip" style="left:32.9%;width:36.9%"><b>Clip 2</b></button>
+        <button class="blk clip" style="left:70%;width:30%"><b>Clip 3</b></button>
+        <div class="mark cut" style="left:0.2%;width:0.5%"></div>
+        <div class="mark cut" style="left:3.3%;width:0.4%"></div>
+        <div class="mark sugg" data-m="1" style="left:1%;width:0.8%"></div>
+        <div class="mark sugg" data-m="2" style="left:33%;width:1.2%"></div>
+        <div class="mark sugg" data-m="3" style="left:35.3%;width:0.9%"></div>
+        <div class="mark sugg" data-m="4" style="left:71%;width:1.2%"></div>
+      </div>
+      <div class="track h-thin" id="zoomTrack">
+        <button class="blk zoom" style="left:14.2%;width:2.2%" data-scale="1.4">1.4×</button>
+        <button class="blk zoom" style="left:39.7%;width:2.4%" data-scale="1.6">1.6×</button>
+        <button class="blk zoom" style="left:75%;width:2.6%" data-scale="1.8">1.8×</button>
+      </div>
+      <div class="track h-thin"><div class="capchips" id="capchips"></div></div>
+      <div class="zpop" id="zpop" hidden>
+          <div class="line"><b>Zoom</b><span id="zVal">1.6×</span></div>
+          <input type="range" min="1.1" max="3" step="0.1" value="1.6" id="zRange" aria-label="How far to zoom in">
+          <div class="seg"><button aria-pressed="true">Follow my mouse</button><button aria-pressed="false">Stay on one spot</button></div>
+          <button class="btn sm danger" id="zDel" style="align-self:flex-start">Remove zoom</button>
+        </div>
+      <div class="playhead" id="playhead" style="left:1.84%"></div>
+    </div>
+  </div>
+</section>
+
+<button class="selcut" id="selcut"><svg class="ic"><use href="assets/icons.svg#scissors"/></svg>Cut</button>
+
+<div class="scrim" id="export" hidden>
+  <div class="dialog" role="dialog" aria-labelledby="exTitle">
+    <div class="dh"><h2 id="exTitle">Export video</h2><button class="iconbtn" id="exClose" aria-label="Close"><svg class="ic"><use href="assets/icons.svg#x"/></svg></button></div>
+    <div class="two">
+      <div class="field"><span class="label">Quality</span><select class="select"><option>HD (1080p)</option><option>4K</option><option>Small file (720p)</option></select></div>
+      <div class="field"><span class="label">Captions</span><select class="select"><option>On the video</option><option>As a separate file</option><option>No captions</option></select></div>
+    </div>
+    <div class="big">
+      <button class="btn primary" id="dl"><svg class="ic"><use href="assets/icons.svg#download"/></svg><span id="dlText">Download video</span></button>
+      <div class="progress" id="prog" hidden><i id="progBar"></i></div>
+      <small id="dlNote">MP4, about 1.4 GB. It saves to your Downloads folder.</small>
+    </div>
+    <div class="notice err" id="exFail" hidden><span class="dot"></span><span class="grow"><b>The export stopped before it finished.</b> Your edits are safe. Try again, or pick a smaller quality.</span></div>
+    <div class="or">or</div>
+    <div class="big">
+      <button class="btn outline" id="copyLink"><svg class="ic"><use href="assets/icons.svg#link"/></svg><span id="linkText">Copy a link to share</span></button>
+      <small>Anyone with the link can watch. Good for video messages. <a href="watch.html" target="_blank">See the page they get</a></small>
+    </div>
+  </div>
+</div>
+
+<div class="notice warn floatnote" id="offline" hidden><span class="dot"></span><span class="grow">You're offline. Your edits are saved on this computer and will sync when you're back online.</span></div>
+
+<div class="toast" id="toast" hidden><span id="toastText"></span><button id="toastUndo">Undo</button></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const TOTAL=760,preview=$('#preview');
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+let undoFn=null;
+function toast(text,undo){const t=$('#toast');$('#toastText').textContent=text;$('#toastUndo').style.display=undo?'':'none';undoFn=undo||null;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,4000);}
+$('#toastUndo').onclick=()=>{if(undoFn)undoFn();$('#toast').hidden=true;};
+$('#undo').onclick=()=>{if(undoFn){undoFn();undoFn=null;$('#toast').hidden=true;}};
+
+// Tabs
+$$('.ptabs button').forEach(b=>b.onclick=()=>{$$('.ptabs button').forEach(x=>x.setAttribute('aria-selected',x===b));$('#tab-transcript').hidden=b.dataset.tab!=='transcript';$('#tab-style').hidden=b.dataset.tab!=='style';hideSel();});
+// Generic controls
+$$('.seg').forEach(s=>s.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('button',s).forEach(x=>x.setAttribute('aria-pressed',x===b));}));
+$$('.switch').forEach(s=>s.addEventListener('click',()=>s.setAttribute('aria-checked',s.getAttribute('aria-checked')!=='true')));
+$$('.chip').forEach(c=>c.onclick=()=>c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')!=='true'));
+const isOn=id=>$(id).getAttribute('aria-checked')==='true';
+
+// Playhead and seeking
+let t=14,playing=false,timer;
+function seek(s){t=Math.max(0,Math.min(TOTAL,s));$('#tc').textContent=fmt(t);$('#playhead').style.left=(t/TOTAL*100)+'%';
+  let cur=null;$$('.s').forEach(x=>{if(+x.dataset.t<=t)cur=x;});$$('.s').forEach(x=>x.classList.toggle('now',x===cur));}
+$('#play').onclick=()=>{playing=!playing;$('#play use').setAttribute('href','assets/icons.svg#'+(playing?'pause':'play'));$('#play').setAttribute('aria-label',playing?'Pause':'Play');clearInterval(timer);if(playing)timer=setInterval(()=>seek((t+1)%TOTAL),1000);};
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.target.closest('input,select,textarea,[contenteditable],button')){e.preventDefault();$('#play').click();}});
+
+// Timeline
+const ruler=$('#ruler');for(let m=0;m<=12;m+=2){const s=document.createElement('span');s.style.left=(m*60/TOTAL*100)+'%';s.textContent=m+':00';ruler.appendChild(s);}
+$$('.blk.clip').forEach(c=>{const n=Math.round(parseFloat(c.style.width)*2.6);for(let i=0;i<n;i++){const w=document.createElement('i');w.style.height=(14+Math.abs(Math.sin(i*1.7)+Math.sin(i*.31))*26)+'%';c.appendChild(w);}});
+$('#capchips').innerHTML=['today I want','to show you','how I plan','a paid media test','when the budget','is small','the first thing','I do is','write down','one question','the test has','to answer','if you can\'t','say the question','in one sentence','the test is','too big','I keep it','to one channel','and one audience','for the budget','I split it','so that eighty','percent goes','to the test','and twenty','percent is','held back'].map(x=>`<span>${x}</span>`).join('');
+let selected=null;
+function select(el){$$('.blk.selected').forEach(x=>x.classList.remove('selected'));selected=el;if(el)el.classList.add('selected');
+  const pop=$('#zpop');if(el&&el.classList.contains('zoom')){pop.hidden=false;pop.style.left=`clamp(0px, calc(${el.style.left} - 100px), calc(100% - 240px))`;$('#zRange').value=el.dataset.scale;$('#zVal').textContent=el.dataset.scale+'×';}else pop.hidden=true;}
+$('#tracks').addEventListener('click',e=>{if(e.target.closest('.zpop'))return;const r=$('#tracks').getBoundingClientRect();seek((e.clientX-r.left)/r.width*TOTAL);select(e.target.closest('.blk'));});
+$('#zRange').oninput=e=>{if(!selected)return;const v=(+e.target.value).toFixed(1);selected.dataset.scale=v;selected.textContent=v+'×';$('#zVal').textContent=v+'×';};
+function removeBlk(el){if(!el)return toast('Click a clip or a zoom in the timeline first, then Delete.');
+  if(el.classList.contains('zoom')){const parent=el.parentNode,next=el.nextSibling;el.remove();select(null);toast('Zoom removed.',()=>parent.insertBefore(el,next));}
+  else{el.classList.add('removed');select(null);toast(el.querySelector('b').textContent+' removed from the video.',()=>el.classList.remove('removed'));}}
+$('#zDel').onclick=()=>removeBlk(selected);
+$('#delBtn').onclick=()=>removeBlk(selected);
+$('#addZoom').onclick=()=>{const b=document.createElement('button');b.className='blk zoom';b.style.left=(t/TOTAL*100)+'%';b.style.width='2.4%';b.dataset.scale='1.5';b.textContent='1.5×';$('#zoomTrack').appendChild(b);select(b);};
+$('#splitBtn').onclick=()=>{const s=document.createElement('div');s.className='split';s.style.left=(t/TOTAL*100)+'%';$('#clipTrack').appendChild(s);toast('Clip split at '+fmt(t)+'.',()=>s.remove());};
+
+// Possible mistakes
+const remaining=new Set([1,2,3,4]);
+function refreshFound(){$('#foundN').textContent=remaining.size;$('#found').hidden=remaining.size===0;}
+function openCard(i){$$('.sugcard').forEach(c=>c.hidden=+c.dataset.card!==i);$$('.sug').forEach(s=>s.classList.toggle('active',+s.dataset.s===i));
+  if(i){const s=$(`.sug[data-s="${i}"]`);s.scrollIntoView({block:'center',behavior:'smooth'});}}
+function resolve(i,cut,chain=true){const s=$(`.sug[data-s="${i}"]`),m=$(`.mark[data-m="${i}"]`);
+  s.classList.remove('sug','active');if(cut)s.classList.add('cutx');else s.classList.add('s');
+  if(m){if(cut){m.classList.remove('sugg');m.classList.add('cut');}else m.hidden=true;}
+  $(`.sugcard[data-card="${i}"]`).hidden=true;remaining.delete(i);refreshFound();
+  if(cut)setTotal(-(+s.dataset.secs));
+  if(chain){const next=[...remaining][0];if(next)openCard(next);}}
+let total=TOTAL;function setTotal(d){total+=d;$('#total').textContent=fmt(total);}
+$('#review').onclick=()=>openCard([...remaining][0]);
+$('#cutAll').onclick=()=>{const n=remaining.size;[...remaining].forEach(i=>resolve(i,true,false));toast(n+' mistakes cut from the video.');};
+$('#transcript').addEventListener('click',e=>{
+  const c=e.target.closest('[data-cut]'),k=e.target.closest('[data-keep]');
+  if(c)return resolve(+c.dataset.cut,true);
+  if(k)return resolve(+k.dataset.keep,false);
+  if(!window.getSelection().isCollapsed)return;
+  const sg=e.target.closest('.sug');if(sg)return openCard(+sg.dataset.s);
+  const x=e.target.closest('.cutx');if(x){x.classList.remove('cutx');if(!x.classList.contains('pause'))x.classList.add('s');return toast('Brought back.',()=>{x.classList.add('cutx');x.classList.remove('s');});}
+  const s=e.target.closest('.s');if(s&&s.dataset.t)seek(+s.dataset.t);
+});
+
+// Select words, then Cut
+const selcut=$('#selcut');
+function hideSel(){selcut.classList.remove('show');}
+document.addEventListener('selectionchange',()=>{const sel=window.getSelection();
+  if(sel.isCollapsed||!sel.rangeCount||!$('#transcript').contains(sel.anchorNode)||!$('#transcript').contains(sel.focusNode))return hideSel();
+  const r=sel.getRangeAt(0).getBoundingClientRect();if(!r.width)return hideSel();
+  selcut.style.left=Math.max(8,Math.min(innerWidth-90,r.left+r.width/2-36))+'px';selcut.style.top=Math.max(8,r.top-40)+'px';selcut.classList.add('show');});
+selcut.addEventListener('mousedown',e=>e.preventDefault());
+selcut.onclick=()=>{const sel=window.getSelection();if(sel.isCollapsed)return;const range=sel.getRangeAt(0),span=document.createElement('span');span.className='cutx';
+  span.appendChild(range.extractContents());range.insertNode(span);sel.removeAllRanges();hideSel();
+  toast('Cut from the video.',()=>{span.classList.remove('cutx');});};
+
+// Style tab
+$$('#layouts .tile').forEach(o=>o.onclick=()=>{$$('#layouts .tile').forEach(x=>x.setAttribute('aria-pressed',x===o));preview.dataset.layout=o.dataset.l;});
+$$('#capStyles .tile').forEach(o=>o.onclick=()=>{$$('#capStyles .tile').forEach(x=>x.setAttribute('aria-pressed',x===o));$('#cap').className='cap '+o.dataset.c;});
+$('#capSwitch').addEventListener('click',()=>{const on=isOn('#capSwitch');$('#cap').style.display=on?'':'none';$('#capStyles').classList.toggle('dim',!on);});
+$$('#bgs .sw').forEach(o=>o.onclick=()=>{$$('#bgs .sw').forEach(x=>x.setAttribute('aria-pressed',x===o));preview.style.background=o.dataset.bg;});
+$('#zoomSwitch').addEventListener('click',()=>{const on=isOn('#zoomSwitch');$('#zoomAmt').classList.toggle('dim',!on);$$('#zoomTrack .blk').forEach(b=>b.style.display=on?'':'none');select(null);});
+$('#nameSwitch').addEventListener('click',()=>$('#nameMark').style.display=isOn('#nameSwitch')?'':'none');
+const wave=$('#wave');
+function drawWave(noisy){wave.innerHTML='';wave.classList.toggle('noisy',noisy);for(let i=0;i<64;i++){const b=document.createElement('i');const speech=(i%17)<11;let h=speech?25+Math.abs(Math.sin(i*.9))*65:(noisy?16+((i*7)%12):4);b.style.height=h+'%';wave.appendChild(b);}}
+drawWave(false);
+$('#ba').addEventListener('click',e=>{const b=e.target.closest('button');if(b)drawWave(b.dataset.v==='before');});
+$('#soundSwitch').addEventListener('click',()=>$('#soundBox').classList.toggle('dim',!isOn('#soundSwitch')));
+$('#sample').onclick=()=>toast('Playing 10 seconds of the '+($('#ba [aria-pressed="true"]').dataset.v==='before'?'original':'cleaned')+' sound.');
+
+// Export
+$('#exportBtn').onclick=()=>{select(null);$('#export').hidden=false;};
+$('#exClose').onclick=()=>$('#export').hidden=true;
+$('#export').addEventListener('click',e=>{if(e.target.id==='export')$('#export').hidden=true;});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#export').hidden=true;select(null);openCard(0);}});
+$('#dl').onclick=()=>{const b=$('#dl');b.disabled=true;$('#dlText').textContent='Preparing your video';$('#prog').hidden=false;$('#dlNote').textContent='This takes a few minutes. You can close this window and keep working.';
+  requestAnimationFrame(()=>$('#progBar').style.width='100%');
+  setTimeout(()=>{$('#dlText').textContent='Downloaded';$('#dlNote').textContent='Saved to your Downloads folder.';},1700);};
+$('#copyLink').onclick=()=>{$('#linkText').textContent='Link copied';};
+
+seek(14);refreshFound();
+
+// Other moments, opened with ?state=... (see states.html)
+const state=new URLSearchParams(location.search).get('state');
+if(state==='processing'||state==='notranscript'){$('#transcriptReady').hidden=true;$(state==='processing'?'#making':'#noTranscript').hidden=false;
+  $$('.tmark.sugg, .mark.sugg').forEach(m=>m.hidden=true);$('#capchips').innerHTML='';$('#cap').style.display='none';}
+if(state==='exporting'){$('#export').hidden=false;$('#dl').disabled=true;$('#dlText').textContent='Preparing your video, 42%';$('#prog').hidden=false;$('#progBar').style.transition='none';$('#progBar').style.width='42%';
+  $('#dlNote').textContent='About 3 minutes left. You can close this window and keep working.';}
+if(state==='exportfail'){$('#export').hidden=false;$('#exFail').hidden=false;$('#dlText').textContent='Try the download again';}
+if(state==='offline'){$('#offline').hidden=false;$('.saved').textContent='Saved on this computer';}
+</script>
+</body>
+</html>

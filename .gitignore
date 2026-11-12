@@ -1,0 +1,34 @@
+# Files git must never save. Each group says why.
+
+# Secrets. The real .env (login password, Claude API key, Swamp tokens)
+# lives only on the server at /docker/loot/.env and must never be copied here.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Swamp run history and local caches. The definitions in automation/models
+# and automation/workflows are saved; the run data is not.
+automation/.swamp/
+automation/.swamp-sources.yaml
+
+# Python caches, rebuilt every time the code runs.
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# macOS folder settings.
+.DS_Store
+._*
+
+# Recordings and exports. They are large and private, and they belong on the
+# server's data volume, not in the code history. To save one sample video on
+# purpose, add it with: git add -f path/to/file
+/data/
+*.mp4
+*.mov
+*.webm
+*.mkv
+*.wav

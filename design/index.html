@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LOOT</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  .wrap{max-width:1320px;margin:0 auto;padding:var(--space-7) var(--space-6) var(--space-9)}
+  .head{display:flex;align-items:center;gap:var(--space-4);margin-bottom:var(--space-5);flex-wrap:wrap}
+  .head h1{font-size:24px;line-height:32px}
+  .record{margin-left:auto;height:44px;padding:0 20px 0 16px;font-size:15px;gap:10px}
+  .record i{width:12px;height:12px;border-radius:50%;background:var(--record);display:block}
+  .filters{display:inline-flex;margin-bottom:var(--space-5)}
+  .filters button{padding:6px 14px;font-size:var(--fs-sm)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--space-6) var(--space-5)}
+  .card{display:flex;flex-direction:column;gap:10px;color:inherit;text-decoration:none;min-width:0}
+  .card:hover{text-decoration:none}
+  .thumb{position:relative;border-radius:8px;overflow:hidden;background:var(--stage)}
+  .thumb .frame{border-radius:0}
+  .thumb::after{content:"";position:absolute;inset:0;border-radius:8px;box-shadow:inset 0 0 0 1px var(--line);pointer-events:none;transition:box-shadow var(--dur-fast) var(--ease)}
+  .card:hover .thumb::after,.card:focus-visible .thumb::after{box-shadow:inset 0 0 0 2px var(--purple-soft)}
+  .card:focus-visible{box-shadow:none}
+  .playover{position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,17,24,.35);opacity:0;transition:opacity var(--dur-fast) var(--ease);z-index:3}
+  .playover span{width:44px;height:44px;border-radius:50%;background:rgba(246,246,244,.94);color:#1A1620;display:grid;place-items:center}
+  .playover .ic{width:18px;height:18px;margin-left:2px}
+  .card:hover .playover{opacity:1}
+  .dur{position:absolute;right:8px;bottom:8px;background:rgba(20,17,24,.88);font-size:var(--fs-xs);font-variant-numeric:tabular-nums;padding:2px 6px;border-radius:4px;z-index:4}
+  .state{position:absolute;left:8px;top:8px;z-index:4;display:inline-flex;align-items:center;gap:6px;background:rgba(20,17,24,.9);font-size:var(--fs-xs);line-height:22px;padding:0 8px;border-radius:4px}
+  .bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(246,246,244,.15);z-index:4}
+  .bar i{display:block;height:100%;background:var(--warn)}
+  .info{display:flex;gap:var(--space-2);align-items:flex-start}
+  .info .t{font-size:var(--fs-md);line-height:var(--lh-md);font-weight:var(--fw-medium);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .info .m{font-size:var(--fs-xs);color:var(--fg-muted);margin-top:3px}
+  .info .iconbtn{margin-left:auto;margin-top:-4px}
+  .info .iconbtn.todo{color:var(--warn)}
+
+  /* Thumbnail artwork (stand-ins for real video frames) */
+  .tt{position:absolute;left:6%;top:16%;width:58%;font-weight:700;color:#fff;font-size:19px;line-height:1.12;letter-spacing:-.2px;z-index:2}
+  .frame.title .cam{width:38%;right:4%;bottom:-6%;box-shadow:none;background:radial-gradient(circle at 50% 45%,#6A578F,transparent 70%)}
+  .vert{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#141118}
+  .vert .v{height:100%;aspect-ratio:9/16;position:relative;overflow:hidden;background:radial-gradient(120% 80% at 50% 20%,#3a2a55,#141118)}
+  .vert .v img{position:absolute;bottom:0;left:-10%;width:120%}
+  .vert .v span{position:absolute;left:8%;right:8%;top:26%;font-size:9px;font-weight:700;color:#fff;line-height:1.15}
+
+  @media (max-width:560px){
+    .wrap{padding:var(--space-5) var(--space-4) var(--space-8)}
+    .record{margin-left:0;width:100%;justify-content:center}
+    .grid{grid-template-columns:1fr 1fr;gap:var(--space-5) var(--space-3)}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="wordmark" href="index.html">LOOT</a>
+  <div class="right">
+    <a class="btn quiet" href="brand.html"><svg class="ic"><use href="assets/icons.svg#palette"/></svg>Brand settings</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="head">
+    <h1 class="page-title">Your videos</h1>
+    <a class="btn primary record" href="recorder.html"><i></i>Record a video</a>
+  </div>
+
+  <div class="seg filters" id="filters" role="group" aria-label="Show">
+    <button aria-pressed="true" data-f="all">All</button>
+    <button aria-pressed="false" data-f="video">Videos</button>
+    <button aria-pressed="false" data-f="short">Shorts</button>
+    <button aria-pressed="false" data-f="message">Messages</button>
+  </div>
+
+  <div class="notice err" id="fullNotice" hidden style="margin-bottom:var(--space-5)">
+    <span class="dot"></span>
+    <span class="grow"><b>The server is out of space.</b> New recordings can't be processed until you download or delete finished videos.</span>
+    <button class="btn" id="showTodo">Show videos to download</button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" hidden>
+    <span class="badge"><svg class="ic"><use href="assets/icons.svg#video"/></svg></span>
+    <h2>No videos yet</h2>
+    <p>Record your first one and it will show up here.</p>
+    <a class="btn primary lg" href="recorder.html">Record a video</a>
+  </div>
+</main>
+
+<div class="toast" id="toast" hidden><span id="toastText"></span></div>
+
+<script>
+const shot='<div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div><div class="row"></div><div class="row"></div></div></div></div>';
+const cam='<div class="cam"><img src="assets/avatar-256.png" alt=""></div>';
+const ic=n=>`<svg class="ic"><use href="assets/icons.svg#${n}"/></svg>`;
+// state: undefined = downloaded and done. "todo" = finished but not downloaded yet. "busy" = processing.
+const items=[
+ {t:'How I plan a paid media test on a small budget',k:'video',d:'12:40',when:'Edited today',art:'title',href:'editor.html'},
+ {t:'Walkthrough of the job tracker board',k:'video',d:'3:20',when:'Recorded today',art:'demo',busy:64,href:'editor.html'},
+ {t:'Write one question first',k:'short',d:'0:48',when:'Made today',art:'short',state:'todo',href:'shorts.html'},
+ {t:'Thanks for the introduction',k:'message',d:'1:05',when:'10 Nov',art:'cam',state:'todo',href:'editor.html'},
+ {t:'What I learned running inbound',k:'video',d:'18:02',when:'6 Nov',art:'title',href:'editor.html'},
+ {t:'Daily Reads in two minutes',k:'video',d:'2:04',when:'4 Nov',art:'side',href:'editor.html'},
+ {t:'Cost per qualified lead, explained',k:'short',d:'0:55',when:'28 Oct',art:'short',href:'shorts.html'},
+ {t:'Follow-up after our call',k:'message',d:'2:31',when:'3 Nov',art:'cam',href:'editor.html'},
+];
+function art(i){
+  if(i.art==='title')return `<div class="frame bg-brand title"><div class="tt">${i.t}</div>${cam}</div>`;
+  if(i.art==='demo')return `<div class="frame bg-brand">${shot}${cam}</div>`;
+  if(i.art==='side')return `<div class="frame bg-brand" data-layout="side">${shot}${cam}</div>`;
+  if(i.art==='cam')return `<div class="frame bg-brand" data-layout="cam">${cam}</div>`;
+  return `<div class="frame"><div class="vert"><div class="v"><span>${i.t}</span><img src="assets/avatar-256.png" alt=""></div></div></div>`;
+}
+const kind={video:'Video',short:'Short',message:'Message'};
+const grid=document.getElementById('grid');
+function render(f){
+  grid.innerHTML='';
+  items.filter(i=>f==='all'||i.k===f).forEach(i=>{
+    const a=document.createElement('a');a.className='card';a.href=i.href;
+    const state=i.busy?`<span class="state"><span class="dot st-warn"></span>Processing, ${i.busy}%</span>`:i.state==='todo'?`<span class="state"><span class="dot st-warn"></span>Not downloaded yet</span>`:'';
+    a.innerHTML=`<div class="thumb">${art(i)}${state}<span class="playover"><span>${ic('play')}</span></span><span class="dur">${i.d}</span>${i.busy?`<span class="bar"><i style="width:${i.busy}%"></i></span>`:''}</div>
+    <div class="info"><div><div class="t">${i.t}</div><div class="m">${kind[i.k]} · ${i.when}</div></div>${i.busy?'':`<button class="iconbtn ${i.state==='todo'?'todo':''}" title="Download to my drive" aria-label="Download ${i.t}" data-dl>${ic('download')}</button>`}</div>`;
+    grid.appendChild(a);
+  });
+}
+render('all');
+// Other moments, opened with ?state=empty or ?state=full (see states.html)
+const state=new URLSearchParams(location.search).get('state');
+if(state==='empty'){grid.style.display='none';document.getElementById('filters').style.display='none';document.querySelector('.record').style.display='none';document.getElementById('empty').hidden=false;}
+if(state==='full'){document.getElementById('fullNotice').hidden=false;document.getElementById('showTodo').onclick=()=>{[...grid.children].forEach(c=>{if(!c.querySelector('.state')||c.querySelector('.bar'))c.style.display='none';});};}
+document.getElementById('filters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;document.querySelectorAll('#filters button').forEach(x=>x.setAttribute('aria-pressed',x===b));render(b.dataset.f);});
+grid.addEventListener('click',e=>{const d=e.target.closest('[data-dl]');if(!d)return;e.preventDefault();
+  d.classList.remove('todo');const s=d.closest('.card').querySelector('.state');if(s)s.remove();
+  const t=document.getElementById('toast');document.getElementById('toastText').textContent='Downloading to your drive';t.hidden=false;clearTimeout(window._t);window._t=setTimeout(()=>t.hidden=true,2200);});
+</script>
+</body>
+</html>

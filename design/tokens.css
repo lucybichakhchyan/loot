@@ -1,0 +1,98 @@
+/*
+  LOOT design tokens (dark pro tool direction)
+
+  The app is a dark working tool built from the grounded purples in the
+  owner's design system. Interface text is Inter. Playfair Display italic
+  is used only on the public-facing surfaces (share page, brand settings
+  preview, exports), and the 2px editorial corner is kept for those.
+  Tools use 6px corners.
+
+  These tokens style the app interface only. Brand templates, caption styles
+  and exported video carry their own values from Brand settings.
+*/
+
+@font-face{font-family:"Playfair Display";src:url("fonts/PlayfairDisplay-VariableFont_wght.ttf") format("truetype-variations");font-weight:400 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Playfair Display";src:url("fonts/PlayfairDisplay-Italic-VariableFont_wght.ttf") format("truetype-variations");font-weight:400 900;font-style:italic;font-display:swap}
+@font-face{font-family:"Inter";src:url("fonts/Inter-VariableFont_opsz,wght.ttf") format("truetype-variations");font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Inter";src:url("fonts/Inter-Italic-VariableFont_opsz,wght.ttf") format("truetype-variations");font-weight:100 900;font-style:italic;font-display:swap}
+
+:root{
+  /* Surfaces, darkest to lightest. Fills separate levels, with hairlines only where needed. */
+  --stage:#141118;           /* behind the video preview, the darkest level */
+  --bg:#1A1620;              /* app canvas */
+  --surface:#211B2B;         /* side panels and rails */
+  --surface-2:#2A2338;       /* inputs, cards, timeline tracks */
+  --surface-3:#342B45;       /* hover on surfaces */
+  --fg:#F6F6F4;              /* main text, never pure white */
+  --fg-muted:rgba(246,246,244,0.66);
+  --fg-faint:rgba(246,246,244,0.42);
+  --white:#FFFFFF;
+
+  /* Lines */
+  --line:rgba(246,246,244,0.08);        /* dividers between panels and rows */
+  --line-strong:#574777;                /* selected and focused edges */
+  --control-border:#6B6280;             /* field and outlined button edge, 3:1 on dark */
+
+  /* Grounded purples */
+  --purple-surface:#2D253A;  /* selected fills */
+  --purple-line:#574777;     /* selected borders, card rules */
+  --purple-strong:#6A578F;   /* primary action fill */
+  --purple-soft:#AB8CF0;     /* accent: selection, links, playhead, focus ring */
+  --purple-text:#BEADD6;     /* small evidence text, labels on purple */
+
+  /* Bright purple: export finish and the record button ring only */
+  --accent:#8A2BE2;
+  --accent-hover:#A762E7;
+
+  /* Status */
+  --record:#E66A63;          /* recording dot, destructive actions, errors */
+  --record-surface:#3A2222;
+  --warn:#E2C184;            /* processing, waiting for download, zoom track */
+  --ok:#9CC9A6;              /* saved to drive, export finished */
+
+  /* Timeline tracks, one color per type */
+  --track-clip:#2D253A;      --track-clip-edge:#574777;
+  --track-cut:rgba(230,106,99,0.18); --track-cut-edge:#E66A63;
+  --track-suggest:rgba(171,140,240,0.16); --track-suggest-edge:#AB8CF0;
+  --track-layout:#2A2338;    --track-layout-edge:#6B6280;
+  --track-zoom:rgba(226,193,132,0.14); --track-zoom-edge:#E2C184;
+  --track-caption:#2A2338;   --track-caption-edge:rgba(246,246,244,0.28);
+  --waveform:rgba(190,173,214,0.55);
+
+  /* Type: Inter for the app, Playfair only on public surfaces */
+  --font-body:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-display:"Playfair Display",ui-serif,Georgia,"Times New Roman",serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,monospace; /* timecodes only */
+
+  --fs-page-title:20px;  --lh-page-title:28px;  /* page and panel headings, Inter 600 */
+  --fs-panel-title:15px; --lh-panel-title:20px;
+  --fs-lg:16px;  --lh-lg:24px;   /* card titles */
+  --fs-md:14px;  --lh-md:20px;   /* default interface text */
+  --fs-sm:13px;  --lh-sm:18px;   /* buttons, secondary text */
+  --fs-xs:12px;  --lh-xs:16px;   /* metadata, timecodes */
+  --fs-2xs:11px; --lh-2xs:14px;  /* track labels, badges */
+  --fw-regular:400; --fw-medium:500; --fw-semibold:600;
+
+  /* Space (4px base) */
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px;
+  --space-6:24px; --space-7:32px; --space-8:40px; --space-9:56px;
+
+  /* Shape and size */
+  --radius:6px;           /* tools, controls, cards */
+  --radius-editorial:2px; /* share page, brand preview, exported artwork */
+  --control-h:32px;       /* dense tool controls */
+  --control-h-lg:36px;    /* main actions */
+  --topbar-h:48px;
+  --rail-w:64px;          /* labelled tool rail */
+  --panel-w:340px;        /* tool panel */
+  --timeline-h:212px;
+
+  /* Motion: hover and press only, kept short */
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --dur-fast:120ms;
+  --dur:180ms;
+
+  --focus-ring:0 0 0 2px var(--bg), 0 0 0 4px var(--purple-soft);
+}
+
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:var(--fs-md);line-height:var(--lh-md);-webkit-font-smoothing:antialiased}
