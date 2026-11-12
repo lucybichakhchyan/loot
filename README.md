@@ -4,6 +4,12 @@ LOOT is a web app for recording your screen and camera, editing the recording by
 
 I built LOOT for my own videos: long YouTube videos, shorts cut from them, quick video messages and product demos. My own copy runs at `loot.bichakhchyan.com`, and the code here is the same code that runs there. You are welcome to fork it and run your own.
 
+**[Try the clickable demo](https://lucybichakhchyan.github.io/loot/)**: every screen, with sample content, in your browser and with nothing to install. The [list of screens and moments](https://lucybichakhchyan.github.io/loot/states.html) opens each state directly, such as an export in progress or a share link.
+
+![LOOT's home page, with videos, shorts and video messages](docs/screenshots/home.jpg)
+
+The screenshots below come from the clickable demo, so they show sample content.
+
 ## What it does
 
 **Record**
@@ -12,6 +18,8 @@ I built LOOT for my own videos: long YouTube videos, shorts cut from them, quick
 - Read from a teleprompter that scrolls your script and marks the paragraph you are on. A small floating controller lets you pause, stop or open the script without leaving the tab you are recording.
 - Upload a video file instead of recording.
 - Press Share now after recording to get a link at once. LOOT prepares and exports the video by itself, and the page behind the link fills in when it is ready.
+
+![The recorder with two clips recorded and a third one recording](docs/screenshots/recorder.jpg)
 
 **Edit**
 - Cut the video by cutting words in the transcript. "Um", "uh" and long pauses are removed automatically, and Claude points out retakes and false starts for you to review.
@@ -22,11 +30,16 @@ I built LOOT for my own videos: long YouTube videos, shorts cut from them, quick
 - Add a title card at the start and a closing card at the end.
 - Get a title, a description and YouTube chapters that Claude writes from the transcript.
 
+![The editor: the transcript with suggested cuts, the preview, and the timeline with clips, zooms and captions](docs/screenshots/editor.jpg)
+![The editor with a blur and text on the video, each with its own row on the timeline](docs/screenshots/editor-blur-and-text.jpg)
+
 **Sound**
 - Every recording gets noise removal and volume levelling to YouTube's level, and you can compare the original and the cleaned sound.
 
 **Shorts**
 - Claude suggests the parts of a long video that work on their own. You keep, trim or skip each one and download them as upright 1080 by 1920 videos with captions.
+
+![The Shorts page with four suggested shorts, each with a title and a first line](docs/screenshots/shorts.jpg)
 
 **Share and export**
 - Export an MP4 at 1080p or 720p, with captions on the video or as a separate file.
@@ -34,8 +47,13 @@ I built LOOT for my own videos: long YouTube videos, shorts cut from them, quick
 - Copy a GIF for email: the first 3 seconds with a play button, which opens the share page when clicked.
 - The server deletes its copy of a video 3 days after export, so your videos live on your own drive.
 
+![The export dialog with download, share link lifetime and Copy GIF for email](docs/screenshots/export-and-share.jpg)
+![The page a viewer sees when they open a share link](docs/screenshots/share-page.jpg)
+
 **Brand settings**
 - Set your name, logo, colors, headline font, caption style, closing line and share-page button once. Every new video and the share page start from them.
+
+![Brand settings with colors, fonts, logo and name, and a live preview](docs/screenshots/brand-settings.jpg)
 
 ## How it works
 
@@ -43,7 +61,8 @@ I built LOOT for my own videos: long YouTube videos, shorts cut from them, quick
 - `engine/` holds the processing steps. FFmpeg converts, cuts and renders the video. DeepFilterNet removes background noise. Whisper (faster-whisper) writes a transcript with a time for every word. Claude reads the transcript to suggest cuts, shorts, titles, descriptions and chapters.
 - Code does everything that has a right answer, such as timings, lengths, loudness and file clean-up. Claude only does what needs judgement, and code checks every answer before it is used. Claude's answers are saved, so it is never asked twice about the same transcript. A video costs cents in Claude use.
 - `automation/` holds the background jobs as Swamp workflows: preparing clips, processing, exporting, shorts, a nightly clean-up and a morning health check. Swamp is optional: without it, LOOT runs the same steps directly.
-- `design/` holds the approved mockups and design tokens the screens were built from. The app serves its own copy of the styles in `app/static/`.
+- `design/` holds the approved mockups and design tokens the screens were built from. They are also the clickable demo, which GitHub Pages publishes from this folder. The app serves its own copy of the styles in `app/static/`.
+- `docs/screenshots/` holds the pictures in this README.
 - `tools/` holds one-time scripts that turned the first mockups into pages. They are kept for reference and are not needed to run LOOT.
 
 ## How I host mine

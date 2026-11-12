@@ -11,7 +11,7 @@ if [ "${SYNC_DESIGN:-0}" = "1" ]; then
   # The mockups' sample picture stays in design/: the app ships a neutral placeholder, and each owner sets their own in Brand settings.
   mkdir -p app/static/assets && cp design/tokens.css design/app.css app/static/ && cp design/assets/icons.svg app/static/assets/ && cp -R design/fonts/. app/static/fonts/
 fi
-COPYFILE_DISABLE=1 tar --no-xattrs --exclude design --exclude .git --exclude .env --exclude 'automation/.swamp' \
+COPYFILE_DISABLE=1 tar --no-xattrs --exclude design --exclude docs --exclude .github --exclude .git --exclude .env --exclude 'automation/.swamp' \
   --exclude __pycache__ --exclude .DS_Store --exclude '._*' -czf - . \
   | ssh "$SSH_HOST" "tar -xzf - -C $DIR --no-same-owner 2>/dev/null"
 ssh "$SSH_HOST" "cd $DIR && docker compose up -d --build 2>&1 | tail -n 25"
