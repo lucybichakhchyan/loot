@@ -176,6 +176,11 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;b
 .line + .line{margin-top:var(--space-3)}
 .dim{opacity:.4;pointer-events:none}
 
+/* Mirrored camera (the way a mirror shows you). On by default. */
+.frame.mirror > .cam img{scale:-1 1}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+.linkrow{display:flex;gap:6px}
+
 /* ---------- Notices, empty states and waiting ---------- */
 .notice{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;font-size:var(--fs-sm);line-height:var(--lh-sm);background:var(--surface-2)}
 .notice[hidden]{display:none}

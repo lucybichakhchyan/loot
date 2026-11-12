@@ -1,0 +1,34 @@
+id: ca7e8675-790d-4979-9331-303e40d19b8e
+name: loot-short-render
+description: Export one short as an upright MP4 with its first line and boxed captions; no Claude and no tokens
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+    short:
+      type: string
+      pattern: "^[a-z0-9]{6,12}$"
+      description: LOOT short id
+  required: ["project", "short"]
+jobs:
+  - name: export
+    description: FFmpeg cuts the part out, lays the screen above the camera and burns in the first line and captions
+    steps:
+      - name: render
+        description: Writes exports/short_<id>.mp4 and records progress in exports/short_<id>.json
+        task:
+          type: behavior
+          behavior: loot-short-render
+          methodName: execute
+          inputs:
+            project: ${{ inputs.project }}
+            short: ${{ inputs.short }}
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn: []
+    weight: 0
+version: 1

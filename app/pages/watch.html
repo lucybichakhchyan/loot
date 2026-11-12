@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/static/tokens.css">
+<style>
+  /* The page a viewer opens from a shared link. It carries the owner's brand
+     (near-black, off-white, Playfair italic, 2px corners), not the app's look.
+     Colors, headline font and the button come from Brand settings. */
+  :root{--page:#1A1A1A;--ink:#F6F6F4;--ink-muted:rgba(246,246,244,.62);--hair:rgba(246,246,244,.18);--acc:#8A2BE2;--hf:"Playfair Display",ui-serif,Georgia,serif;--hstyle:italic;--hweight:600}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--page);color:var(--ink);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;line-height:24px;-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;display:block}
+  .ic.fill{fill:currentColor}
+
+  .top{display:flex;align-items:center;gap:12px;max-width:1000px;margin:0 auto;padding:20px 24px}
+  .top img{width:36px;height:36px;border-radius:50%;background:#2D253A}
+  .top b{font-weight:500;font-size:15px}
+  main{max-width:1000px;margin:0 auto;padding:0 24px 72px}
+
+  .player{position:relative;aspect-ratio:16/9;border-radius:2px;overflow:hidden;background:radial-gradient(120% 90% at 80% 10%,#3a2a55 0%,#1d1626 45%,#141118 100%);box-shadow:0 0 0 1px var(--hair)}
+  .player .cam{position:absolute;inset:0;display:grid;place-items:center}
+  .player .cam img{height:92%;transform:translateY(6%)}
+  .bigplay{position:absolute;inset:0;margin:auto;width:76px;height:76px;border-radius:50%;border:0;background:var(--ink);color:#1A1A1A;display:grid;place-items:center;cursor:pointer;z-index:3;transition:transform 120ms}
+  .bigplay:hover{transform:scale(1.05)}
+  .bigplay .ic{width:26px;height:26px;margin-left:4px}
+  .playing .bigplay{display:none}
+  .caption{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);font-weight:700;font-size:clamp(14px,2.6vw,26px);color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6);white-space:nowrap;z-index:2;display:none}
+  .playing.cc .caption{display:block}
+  .controls{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;padding:28px 16px 12px;background:linear-gradient(transparent,rgba(0,0,0,.7));z-index:4}
+  .controls button{background:none;border:0;cursor:pointer;padding:6px;border-radius:2px;display:grid;place-items:center;font-size:13px;font-weight:500;min-width:40px;height:40px;color:#fff}
+  .controls button:hover{background:rgba(246,246,244,.14)}
+  .controls button[aria-pressed="true"]{box-shadow:inset 0 -2px 0 var(--acc)}
+  .scrub{flex:1;height:4px;background:rgba(246,246,244,.28);border-radius:2px;position:relative;cursor:pointer;margin:18px 0}
+  .scrub::before{content:"";position:absolute;inset:-16px 0}
+  .scrub i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--acc);border-radius:2px}
+  .scrub i::after{content:"";position:absolute;right:-6px;top:-4px;width:12px;height:12px;border-radius:50%;background:var(--ink)}
+  .tm{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .about{padding-top:32px;max-width:720px}
+  .eyebrow{font-size:15px;color:var(--ink-muted);margin:0 0 10px}
+  .eyebrow::before{content:"( "}.eyebrow::after{content:" )"}
+  h1{font-family:var(--hf);font-style:var(--hstyle);font-weight:var(--hweight);font-size:clamp(32px,5.4vw,52px);line-height:1.04;letter-spacing:-.8px;margin:0;color:#fff}
+  .meta{font-size:14px;color:var(--ink-muted);margin:14px 0 0}
+  .note{font-size:18px;line-height:28px;margin:20px 0 0}
+  .cta{display:inline-flex;align-items:center;height:48px;padding:0 24px;margin-top:28px;border-radius:2px;background:var(--acc);color:var(--on-acc,#fff);font-size:16px;font-weight:500;text-decoration:none}
+  .cta:hover{filter:brightness(1.15)}
+  .cta[hidden]{display:none}
+  .compact .top,.compact main{max-width:780px}
+  .compact h1{font-size:40px}
+  .compact .about{padding-top:24px}
+  @media (max-width:560px){.top{padding:14px 16px}main{padding:0 16px 48px}.controls{gap:6px;padding:20px 8px 8px}.note{font-size:16px;line-height:25px}}
+  .player video{width:100%;height:100%;object-fit:contain;display:block;cursor:pointer}
+  .player.tall{aspect-ratio:9/16;max-height:78vh;margin:0 auto}
+  .player .cam img[hidden]{display:none}
+  .note:empty{display:none}
+  .wait .about{padding-top:96px}
+</style>
+</head>
+<body>
+<header class="top">
+  <img id="logo" src="/static/assets/avatar-256.png" alt="">
+  <b id="who"></b>
+</header>
+
+<main>
+  <div class="player cc" id="player">
+    <div class="cam" id="stage"><img id="still" src="/static/assets/avatar-256.png" alt="" hidden><video id="video" playsinline preload="metadata"></video></div>
+    <div class="caption" id="caption"></div>
+    <button class="bigplay" id="big" aria-label="Play video"><svg class="ic fill"><use href="/static/assets/icons.svg#play"/></svg></button>
+    <div class="controls">
+      <button id="pp" aria-label="Play"><svg class="ic fill"><use href="/static/assets/icons.svg#play"/></svg></button>
+      <div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Position. Arrow keys move five seconds." aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><i id="bar"></i></div>
+      <span class="tm"><span id="cur">0:00</span> / <span id="dur">0:00</span></span>
+      <button id="speed" aria-label="Playback speed">1×</button>
+      <button id="cc" aria-pressed="true" aria-label="Captions"><svg class="ic"><use href="/static/assets/icons.svg#captions"/></svg></button>
+      <button id="vol" aria-label="Mute"><svg class="ic"><use href="/static/assets/icons.svg#volume-2"/></svg></button>
+      <button id="fs" aria-label="Full screen"><svg class="ic"><use href="/static/assets/icons.svg#picture-in-picture-2"/></svg></button>
+    </div>
+  </div>
+
+  <section class="about">
+    <p class="eyebrow" id="eyebrow">video message</p>
+    <h1 id="title"></h1>
+    <p class="meta" id="meta"></p>
+    <p class="note" id="note"></p>
+    <a class="cta" id="cta" href="#" target="_blank" rel="noopener" hidden></a>
+  </section>
+</main>
+
+<script src="/static/js/watch.js"></script>
+</body>
+</html>

@@ -2,6 +2,9 @@
 
 The page it writes is the source from then on. Run it again only after the editor mockup changes,
 and check the result by hand.
+
+NOTE: the page this wrote has since been edited by hand. Running this again would overwrite those edits
+and pull in mockup changes that may not be approved yet. Edit the page in app/pages/ directly instead.
 """
 import pathlib
 import re
@@ -27,11 +30,11 @@ def cut(start, end, replace=""):
 
 sub('href="tokens.css"', 'href="/static/tokens.css"')
 sub('href="app.css"', 'href="/static/app.css"')
-s = s.replace("assets/", "/static/assets/").replace('href="index.html"', 'href="/"')
+s = s.replace("assets/", "/static/assets/").replace('href="index.html"', 'href="/"').replace('href="brand.html"', 'href="/brand"')
 
 # ---- top bar ----
 sub('aria-label="Video title">How I plan a paid media test on a small budget</span>', 'aria-label="Video title"></span>')
-cut('<a class="btn outline" href="shorts.html">', '<button class="exchip" id="exChip"')
+sub('<a class="btn outline" href="shorts.html">', '<a class="btn outline" id="shortsLink" href="/">')
 
 # ---- preview: real videos, cards filled from the project ----
 cut('<div class="shot">', '<div class="mark" id="nameMark">', '''<div class="shot"><span class="zw" id="zw"><video id="screenV" muted playsinline preload="auto"></video></span></div>
@@ -73,13 +76,13 @@ sub("Removes background noise and evens out the volume. Your original recording 
 sub('<svg class="ic fill"><use href="/static/assets/icons.svg#play"/></svg>Listen</button>', '<svg class="ic fill"><use href="/static/assets/icons.svg#play"/></svg><span id="sampleText">Listen</span></button>')
 sub('<div class="wave" id="wave"></div>', '<p class="sub" id="loudness" style="margin:var(--space-3) 0 0"></p>')
 sub('<input class="input" id="outroText" value="More at bichakhchyan.com">', '<input class="input" id="outroText" maxlength="60">')
-sub('<p class="sub" style="margin:var(--space-3) 0 0">These start from your <a href="brand.html">Brand settings</a>. Changes here only affect this video.</p>',
+sub('<p class="sub" style="margin:var(--space-3) 0 0">These start from your <a href="/brand">Brand settings</a>. Changes here only affect this video.</p>',
     '<div class="line"><span>Mirror my camera<br><span class="muted xs">Shows you the way a mirror does. Turn off if text behind you reads backwards.</span></span><button class="switch" role="switch" aria-checked="true" id="mirrorSwitch" aria-label="Mirror my camera"></button></div>\n'
-    '        <p class="sub" style="margin:var(--space-3) 0 0">Changes here only affect this video.</p>')
+    '        <p class="sub" style="margin:var(--space-3) 0 0">These start from your <a href="/brand">Brand settings</a>. Changes here only affect this video.</p>')
 
 # ---- timeline ----
 sub('<a class="btn" href="recorder.html" title="Record another clip for this video">', '<a class="btn" id="recordMore" href="/record" title="Record another clip for this video">')
-cut('<div class="zoomctl">', "</div>\n  <div class=\"tgrid\">")
+sub('<input type="range" value="30" style="--val:30%" aria-label="Timeline zoom">', '<input type="range" id="tzoom" min="0" max="100" value="0" aria-label="Timeline zoom">')
 sub('aria-valuemax="760" aria-valuenow="14"', 'aria-valuemax="0" aria-valuenow="0"')
 cut('<button class="blk clip" style="left:0%;width:32.7%">', '</div>\n      <div class="track h-thin" id="layoutTrack">')
 cut('<button class="blk layoutb"', '</div>\n      <div class="track h-thin" id="zoomTrack">')
@@ -93,13 +96,12 @@ sub("<option>HD (1080p)</option><option>4K</option><option>Small file (720p)</op
 sub("<option>On the video</option><option>As a separate file</option><option>No captions</option>",
     '<option value="burn">On the video</option><option value="file">As a separate file</option><option value="none">No captions</option>')
 sub('<small id="dlNote">MP4, about 1.4 GB. It saves to your Downloads folder.</small>', '<small id="dlNote"></small>')
-cut('<div class="or" style="margin:var(--space-4) 0">or</div>', '</div>\n\n    <div class="view" id="vProgress" hidden>')
+sub('<a href="watch.html" target="_blank">See the page they get</a>', '<a href="/w/preview" target="_blank">See the page they get</a>')
 sub('<small id="pNote">About 3 minutes left. You can close this and keep editing. The Export button shows the progress.</small>',
     '<small id="pNote">You can close this and keep editing. The Export button shows the progress.</small>')
 sub('<p class="xs" style="margin:0;text-align:center;color:var(--fg-muted)">Saved to your Downloads folder as how-i-plan-a-paid-media-test.mp4. LOOT removed its server copy.</p>',
     '<p class="xs" id="doneNote" style="margin:0;text-align:center;color:var(--fg-muted)"></p>')
-cut('<div class="two"><a class="btn outline" href="shorts.html"', '<button class="btn primary lg" id="doneBtn">',
-    '<button class="btn outline" id="dlAgain" style="height:40px"><svg class="ic"><use href="/static/assets/icons.svg#download"/></svg>Download again</button>\n        ')
+sub('<div class="two"><a class="btn outline" href="shorts.html" style="height:40px">', '<div class="two"><a class="btn outline" id="shortsLink2" href="/" style="height:40px">')
 
 sub("</style>", '''  .pv .shot{background:transparent;border-radius:6px;container-type:size;align-items:center;justify-content:center}
   .zw{display:block;overflow:hidden;border-radius:4px;aspect-ratio:var(--ar,16/9);width:min(100cqw,calc(100cqh * var(--ar,16/9)));flex:none}
@@ -123,6 +125,12 @@ sub("</style>", '''  .pv .shot{background:transparent;border-radius:6px;containe
   .tile.dim,.dim{opacity:.4;pointer-events:none}
   .blk.clip.removed b{text-decoration:line-through}
   .tbar .btn[disabled]{opacity:.4;cursor:not-allowed}
+  #preview .cap.boxed em{color:var(--hi,#AB8CF0)}
+  #preview.sans .cap em{font-family:var(--font-body);font-style:normal;color:var(--hi,#AB8CF0)}
+  #preview.sans .mark,#preview.sans .vcard b{font-family:var(--font-body);font-style:normal;font-weight:700}
+  #preview .vcard i{background:var(--hi,#AB8CF0)}
+  .tgrid{overflow-x:auto}
+  .tlabels{position:sticky;left:0;z-index:6;background:var(--bg)}
 </style>''')
 s += '<script src="/static/js/edit.js"></script>\n</body>\n</html>\n'
 (root / "app/pages/edit.html").write_text(s)

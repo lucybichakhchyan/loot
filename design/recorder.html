@@ -11,67 +11,74 @@
 
   /* Stage: the live preview, with the script beside it when open */
   .stage{display:flex;min-height:0;background:var(--stage)}
-  .view{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;padding:var(--space-4) var(--space-5) var(--space-5);gap:var(--space-3)}
-  .kind{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;justify-content:center}
-  .kind .seg button{padding:6px 12px;font-size:var(--fs-sm)}
-  .kind .what{font-size:var(--fs-xs);color:var(--fg-muted)}
-  .pv{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;container-type:size}
+  .view{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;padding:var(--space-3) var(--space-5) var(--space-4);gap:var(--space-3)}
+  .shape{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;justify-content:center}
+  .shape .seg button{padding:6px 16px;font-size:var(--fs-sm)}
+  .shape .seg[data-locked="true"]{opacity:.5;pointer-events:none}
+  .shape .what{font-size:var(--fs-xs);color:var(--fg-muted)}
+  .pv{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;container-type:size;position:relative}
   .pv .frame{width:min(100cqw,calc(100cqh * 16 / 9));border-radius:10px}
   .pv .frame.vertical{aspect-ratio:9/16;width:min(100cqw,calc(100cqh * 9 / 16))}
-  .frame.vertical .shot{inset:5% 5% 44% 5%}
+  .frame.vertical .shot{inset:6% 5% 44% 5%}
   .frame.vertical .cam{width:62%;right:19%;bottom:5%}
   .frame.nocam .cam{opacity:0}
-  .recbadge{position:absolute;left:12px;top:12px;z-index:6;display:none;align-items:center;gap:8px;background:rgba(20,17,24,.85);border-radius:6px;padding:4px 10px;font-size:var(--fs-sm);font-variant-numeric:tabular-nums;color:#fff}
-  .recbadge .dot{color:var(--record);animation:blink 1.2s infinite}
+  .badge{position:absolute;left:12px;top:12px;z-index:6;display:none;align-items:center;gap:8px;background:rgba(20,17,24,.88);border-radius:6px;padding:4px 10px;font-size:var(--fs-sm);color:#fff}
+  .badge .dot{color:var(--record);animation:blink 1.2s infinite}
   @keyframes blink{50%{opacity:.25}}
-  body.recording .recbadge{display:flex}
+  body.recording .badge,body.counting .badge,body.reviewing .badge{display:flex}
+  body.counting .badge .dot{color:var(--warn);animation:none}
+  body.reviewing .badge .dot{color:var(--purple-soft);animation:none}
   body.recording .pv .frame{box-shadow:0 0 0 2px var(--record)}
-  body.paused .recbadge .dot{animation:none;opacity:.4}
+  body.paused .badge .dot{animation:none;opacity:.4}
   .countdown{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:rgba(20,17,24,.6);z-index:7;cursor:pointer;border:0;color:#fff;width:100%}
   .countdown b{font-weight:600;font-size:clamp(72px,18cqh,160px);line-height:1;font-variant-numeric:tabular-nums}
   .countdown span{font-size:var(--fs-sm);color:var(--fg-muted)}
   body.counting .countdown{display:flex}
-
+  .back-live{position:absolute;right:12px;top:12px;z-index:8;display:none}
+  body.reviewing .back-live{display:inline-flex}
   .pv .empty{margin:auto}
   .view .notice{width:min(100%,720px)}
-  body.noperm .recbtn{opacity:.35;pointer-events:none}
-  body.noperm .src{opacity:.5;pointer-events:none}
-  .src.bad{box-shadow:inset 0 0 0 1px var(--warn)}
-  .src.bad .lvl{width:0 !important}
-  .clip .fail{position:absolute;left:4px;top:4px;background:var(--record);color:#fff;font-size:10px;line-height:16px;padding:0 5px;border-radius:3px;z-index:3}
-  #upFail{white-space:nowrap}
-  @media (max-width:900px){#upFail .more{display:none}}
+  .hint{font-size:var(--fs-xs);color:var(--fg-muted);text-align:center;margin:0;max-width:620px}
+  body.recording .hint,body.counting .hint{display:none}
+
   /* Script panel */
   .script{width:340px;flex:none;background:var(--surface);border-left:1px solid var(--line);display:none;flex-direction:column;min-height:0}
   body.script-open .script{display:flex}
   .script .sh{display:flex;align-items:center;justify-content:space-between;padding:var(--space-2) var(--space-2) var(--space-2) var(--space-4);border-bottom:1px solid var(--line)}
   .script .sh b{font-size:var(--fs-md);font-weight:600}
-  .script .text{flex:1;overflow:auto;padding:var(--space-5) var(--space-4);font-size:20px;line-height:30px;color:var(--fg-muted);outline:none}
+  .script .text{flex:1;overflow:auto;padding:var(--space-5) var(--space-4);font-size:20px;line-height:30px;color:var(--fg-muted);outline:none;scroll-behavior:smooth}
   .script .text p{margin:0 0 var(--space-4)}
   .script .text p.now{color:var(--white)}
   .script .sf{border-top:1px solid var(--line);padding:var(--space-3) var(--space-4);display:flex;flex-direction:column;gap:var(--space-2)}
   .script .sf .row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--fs-sm)}
   .script .sf input[type=range]{width:120px}
-  .script .note{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-faint);margin:0}
+  .script .note{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-muted);margin:0}
 
   /* Bottom: clips, then the control bar */
   .bottom{background:var(--bg);border-top:1px solid var(--line)}
-  .cliprow{display:none;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--line)}
+  .cliprow{display:none;align-items:flex-start;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--line)}
   body.has-clips .cliprow{display:flex}
-  .clips{display:flex;gap:var(--space-2);overflow-x:auto;flex:1;min-width:0;padding:2px}
-  .clip{flex:none;width:104px;position:relative}
-  .clip .frame{border-radius:6px}
+  .clips{display:flex;gap:var(--space-3);overflow-x:auto;flex:1;min-width:0;padding:2px}
+  .clip{flex:none;width:148px}
+  .clip .thumbbtn{display:block;width:100%;padding:0;border:0;background:none;cursor:pointer;border-radius:6px;position:relative}
+  .clip .frame{border-radius:6px;pointer-events:none}
   .clip .frame .cam{box-shadow:0 0 0 1px #fff}
-  .clip .meta{display:flex;justify-content:space-between;font-size:var(--fs-2xs);color:var(--fg-muted);margin-top:4px;font-variant-numeric:tabular-nums}
-  .clip .acts{position:absolute;left:0;right:0;top:0;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(20,17,24,.8);border-radius:6px;opacity:0;transition:opacity var(--dur-fast)}
-  .clip:hover .acts,.clip:focus-within .acts{opacity:1}
-  .clip .acts button{font-size:var(--fs-2xs);height:24px;padding:0 7px;border:0;background:var(--surface-3);border-radius:4px;cursor:pointer}
-  .clip .acts button:hover{background:var(--purple-strong)}
+  .clip .thumbbtn:hover .frame{box-shadow:0 0 0 2px var(--control-border)}
+  .clip .thumbbtn .pl{position:absolute;inset:0;display:grid;place-items:center;opacity:0;transition:opacity var(--dur-fast);z-index:3;color:#fff}
+  .clip .thumbbtn:hover .pl{opacity:1}
+  .clip .thumbbtn .pl span{width:28px;height:28px;border-radius:50%;background:rgba(20,17,24,.8);display:grid;place-items:center}
+  .clip .thumbbtn .pl .ic{width:13px;height:13px;margin-left:1px}
+  .clip.playing .frame{box-shadow:0 0 0 2px var(--purple-soft)}
   .clip.fresh .frame{box-shadow:0 0 0 2px var(--purple-soft)}
-  .clip.retaking .frame{box-shadow:0 0 0 2px var(--warn)}
+  .clip .meta{display:flex;align-items:center;justify-content:space-between;font-size:var(--fs-xs);color:var(--fg-muted);margin-top:2px;font-variant-numeric:tabular-nums}
+  .clip .meta .iconbtn{width:30px;height:30px}
+  .clip .meta .iconbtn .ic{width:15px;height:15px}
+  .clip .fail{position:absolute;left:4px;top:4px;background:var(--record);color:#fff;font-size:11px;line-height:16px;padding:0 5px;border-radius:3px;z-index:3}
+  .cliprow .side{display:flex;align-items:center;gap:var(--space-3);flex:none;padding-top:var(--space-1)}
   .cliprow .sum{font-size:var(--fs-xs);color:var(--fg-muted);white-space:nowrap}
+  #upFail{white-space:nowrap}
 
-  .bar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-4)}
+  .bar{display:grid;grid-template-columns:minmax(0,1fr) 60px minmax(0,1fr);align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-4)}
   .sources{display:flex;gap:var(--space-2);min-width:0}
   .srcwrap{position:relative;min-width:0}
   .src{display:flex;align-items:center;gap:10px;height:48px;padding:0 10px 0 12px;border:1px solid transparent;border-radius:8px;background:var(--surface-2);cursor:pointer;text-align:left;min-width:0;max-width:190px;position:relative;overflow:hidden}
@@ -79,93 +86,105 @@
   .src .ic.main{width:18px;height:18px}
   .src .lbl{display:flex;flex-direction:column;min-width:0}
   .src .lbl b{font-size:var(--fs-sm);font-weight:500;line-height:16px}
-  .src .lbl small{font-size:var(--fs-2xs);line-height:14px;color:var(--fg-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .src .lbl small{font-size:var(--fs-xs);line-height:14px;color:var(--fg-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .src .ic.chev{width:14px;height:14px;color:var(--fg-faint)}
   .src[data-on="false"]{background:transparent;border-color:var(--line)}
   .src[data-on="false"] .ic.main{color:var(--fg-faint)}
   .src[data-on="false"] .lbl b{color:var(--fg-muted)}
   .src .lvl{position:absolute;left:0;bottom:0;height:3px;background:var(--ok);width:30%;transition:width 120ms linear}
   .src[data-on="false"] .lvl{display:none}
+  .src.bad{box-shadow:inset 0 0 0 1px var(--warn)}
+  .src.bad .lvl{width:0 !important}
+  .src.toggle[aria-pressed="true"]{background:var(--purple-surface);border-color:var(--purple-line)}
   .srcwrap .menu{left:0;bottom:calc(100% + 8px)}
 
-  .center{display:flex;align-items:center;gap:var(--space-3)}
-  .timer{font-size:18px;font-weight:500;font-variant-numeric:tabular-nums;width:58px;text-align:right;display:none}
-  .recbtn{width:60px;height:60px;border-radius:50%;border:3px solid var(--fg);background:transparent;display:grid;place-items:center;cursor:pointer;padding:0;flex:none}
+  /* The Record button never moves; the timer and take controls sit beside it */
+  .center{position:relative;width:60px;height:60px}
+  .recbtn{width:60px;height:60px;border-radius:50%;border:3px solid var(--fg);background:transparent;display:grid;place-items:center;cursor:pointer;padding:0}
   .recbtn:hover{border-color:var(--white)}
   .recbtn i{width:44px;height:44px;border-radius:50%;background:var(--record);transition:all var(--dur) var(--ease);display:block}
   .recbtn:hover i{background:#EF7B74}
   body.recording .recbtn i,body.counting .recbtn i{width:22px;height:22px;border-radius:5px}
-  .reclabel{font-size:var(--fs-sm);color:var(--fg-muted);width:150px}
+  .timer{position:absolute;right:calc(100% + 14px);top:50%;transform:translateY(-50%);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums;display:none;white-space:nowrap}
+  .reclabel{position:absolute;left:calc(100% + 14px);top:50%;transform:translateY(-50%);font-size:var(--fs-sm);color:var(--fg-muted);white-space:nowrap}
   .reclabel b{display:block;color:var(--fg);font-weight:500}
-  .while{display:none;gap:2px}
-  .mini{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;color:var(--fg-muted);font-size:var(--fs-2xs);padding:6px 8px;border-radius:6px;cursor:pointer;min-width:52px}
+  .while{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);display:none;gap:2px}
+  .mini{white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;color:var(--fg-muted);font-size:var(--fs-xs);padding:6px 10px;border-radius:6px;cursor:pointer;min-width:60px;min-height:44px}
   .mini:hover{background:var(--surface-2);color:var(--fg)}
+  .mini.arm{background:var(--record-surface);color:var(--record)}
+  .discard{position:absolute;right:calc(100% + 96px);top:50%;transform:translateY(-50%);display:none}
   body.recording .timer,body.recording .while{display:flex}
   body.recording .timer{display:block}
+  body.recording .discard,body.counting .discard{display:block}
   body.recording .reclabel,body.counting .reclabel{display:none}
+  body.counting .while{display:none}
   .end{display:flex;justify-content:flex-end;gap:var(--space-2)}
   .btn.tall{height:48px;padding:0 14px;border-radius:8px}
   .btn.tall[aria-pressed="true"]{background:var(--purple-surface);box-shadow:inset 0 0 0 1px var(--purple-line)}
 
-  /* While recording, the source buttons shrink to icons so the timer and controls have room */
+  /* While recording the source buttons shrink to icons so the controls have room */
   body.recording .src .lbl,body.counting .src .lbl{display:none}
+  body.recording .src .ic.chev,body.counting .src .ic.chev{display:none}
+  body.recording .src,body.counting .src{padding:0 14px;pointer-events:none;opacity:.6}
+  body.noperm .recbtn{opacity:.35;pointer-events:none}
+  body.noperm .src{opacity:.5;pointer-events:none}
   @media (max-width:1180px){.reclabel{display:none}}
-  @media (max-width:960px){
-    .src .lbl{display:none}
-    .src{padding:0 10px 0 14px}
-  }
+  @media (max-width:960px){.src .lbl{display:none}.src{padding:0 10px 0 14px}.discard{right:calc(100% + 76px)}}
   @media (max-width:900px){
     .stage{flex-direction:column}
     .script{width:auto;height:34vh;border-left:0;border-top:1px solid var(--line)}
     .script .text{font-size:17px;line-height:26px}
+    #upFail .more{display:none}
   }
   @media (max-width:560px){
     .src .ic.chev{display:none}
     .src{padding:0 14px}
     .btn.tall span{display:none}
-    .kind .what{display:none}
-    .mini{min-width:44px;padding:6px 4px}
+    .shape .what{display:none}
+    .mini span{display:none}.mini{min-width:44px;padding:6px}
+    .discard{right:calc(100% + 56px)}
+    .cliprow .side .sum{display:none}
   }
 </style>
 </head>
 <body>
 <header class="topbar">
-  <a class="back" href="index.html"><svg class="ic"><use href="assets/icons.svg#arrow-left"/></svg>Your videos</a>
+  <a class="back" href="index.html" id="backLink"><svg class="ic"><use href="assets/icons.svg#arrow-left"/></svg>Your videos</a>
   <span class="sep"></span>
   <span class="doc-title" contenteditable="true" spellcheck="false" aria-label="Video title">Untitled video</span>
 </header>
 
 <main class="stage">
   <section class="view" aria-label="Live preview">
-    <div class="kind">
-      <div class="seg" id="kind" role="group" aria-label="What you are recording">
-        <button aria-pressed="true" data-k="long">YouTube video</button>
-        <button aria-pressed="false" data-k="short">Short</button>
-        <button aria-pressed="false" data-k="msg">Message</button>
-        <button aria-pressed="false" data-k="demo">Product demo</button>
+    <div class="shape">
+      <div class="seg" id="shape" role="group" aria-label="Shape of the video">
+        <button aria-pressed="true" data-k="wide">Wide</button>
+        <button aria-pressed="false" data-k="tall">Tall</button>
       </div>
-      <span class="what" id="what">Wide video, 16:9</span>
+      <span class="what" id="what">16:9, for YouTube, messages and demos</span>
     </div>
     <div class="pv">
       <div class="frame bg-brand" id="frame" data-layout="bubble">
         <div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div><div class="row"></div><div class="row"></div></div></div></div>
         <div class="cam"><img src="assets/avatar-256.png" alt=""></div>
-        <div class="recbadge"><span class="dot"></span><span id="badgeTime">0:00</span></div>
+        <div class="badge"><span class="dot"></span><span id="badgeText">Recording clip 1</span></div>
+        <button class="btn back-live" id="backLive"><svg class="ic"><use href="assets/icons.svg#video"/></svg>Back to the camera</button>
         <button class="countdown" id="countdown"><b id="cdNum">3</b><span>Click to start now</span></button>
       </div>
       <div class="empty" id="askPerm" hidden>
-        <span class="badge"><svg class="ic"><use href="assets/icons.svg#video"/></svg></span>
+        <span class="badge-i" style="width:48px;height:48px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;color:var(--purple-soft)"><svg class="ic lg"><use href="assets/icons.svg#video"/></svg></span>
         <h2>Allow your camera and microphone</h2>
         <p>Your browser will ask for permission. LOOT only records after you press Record.</p>
         <button class="btn primary lg" id="allow">Allow camera and microphone</button>
       </div>
       <div class="empty" id="blocked" hidden>
-        <span class="badge" style="color:var(--record)"><svg class="ic"><use href="assets/icons.svg#video"/></svg></span>
+        <span style="width:48px;height:48px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;color:var(--record)"><svg class="ic lg"><use href="assets/icons.svg#video"/></svg></span>
         <h2>Your browser is blocking the camera and microphone</h2>
         <ol><li>Click the icon at the left of the address bar.</li><li>Set Camera and Microphone to Allow.</li><li>Reload this page.</li></ol>
         <a class="btn primary lg" href="recorder.html">Reload the page</a>
       </div>
     </div>
+    <p class="hint" id="hint">With Screen on, your browser asks which tab or window to share when you press Record. LOOT then shows a small controller on top of it, so you can pause or stop without coming back here.</p>
     <div class="notice warn" id="noSound" hidden>
       <span class="dot"></span>
       <span class="grow"><b>No sound is coming from Shure MV7.</b> Check that it is plugged in and not muted, or pick another microphone.</span>
@@ -175,7 +194,7 @@
 
   <aside class="script" aria-label="Script">
     <div class="sh"><b>Script</b><button class="iconbtn" id="scriptClose" aria-label="Close script"><svg class="ic"><use href="assets/icons.svg#x"/></svg></button></div>
-    <div class="text" id="scriptText" contenteditable="true" spellcheck="false">
+    <div class="text" id="scriptText" contenteditable="true" spellcheck="false" aria-label="Your script. Type or paste it here.">
       <p class="now">Today I want to show you how I plan a paid media test when the budget is small.</p>
       <p>The first thing I do is write down one question the test has to answer.</p>
       <p>If you can't say the question in one sentence, the test is too big.</p>
@@ -193,77 +212,101 @@
 <footer class="bottom">
   <div class="cliprow">
     <div class="clips" id="clips" aria-label="Recorded clips"></div>
-    <div class="notice err" id="upFail" hidden style="padding:6px 8px 6px 12px">
-      <span class="dot"></span><span class="grow">Clip 2 didn't upload.<span class="more"> It is safe on this computer.</span></span>
-      <button class="btn sm" id="retryUp">Try again</button>
+    <div class="side">
+      <div class="notice err" id="upFail" hidden style="padding:4px 6px 4px 12px">
+        <span class="dot"></span><span class="grow">Clip 2 didn't upload.<span class="more"> It is safe on this computer.</span></span>
+        <button class="btn sm" id="retryUp">Try again</button>
+      </div>
+      <span class="sum" id="sum"></span>
+      <button class="btn outline lg" id="shareNow" title="Skip the editor and get a link you can send right away"><svg class="ic"><use href="assets/icons.svg#share-2"/></svg><span>Share now</span></button>
+      <a class="btn primary lg" id="editBtn" href="editor.html">Edit video</a>
     </div>
-    <span class="sum" id="sum"></span>
-    <a class="btn primary lg" href="editor.html">Edit video</a>
   </div>
   <div class="bar">
     <div class="sources">
       <div class="srcwrap">
-        <button class="src" data-src="screen" data-on="true" aria-haspopup="menu"><svg class="ic main"><use href="assets/icons.svg#monitor"/></svg><span class="lbl"><b>Screen</b><small>Chrome tab</small></span><svg class="ic chev"><use href="assets/icons.svg#chevron-down"/></svg></button>
-        <div class="menu" hidden><div class="mh">Screen</div>
-          <button aria-checked="true" data-v="Chrome tab"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Chrome tab</button>
-          <button aria-checked="false" data-v="A window"><svg class="ic"><use href="assets/icons.svg#check"/></svg>A window</button>
-          <button aria-checked="false" data-v="Entire screen"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Entire screen</button>
-          <hr><button aria-checked="false" data-v="off"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Don't record the screen</button></div>
+        <button class="src toggle" data-src="screen" data-on="true" aria-pressed="true" title="Screen. Turn it off to record only your camera."><svg class="ic main"><use href="assets/icons.svg#monitor"/></svg><span class="lbl"><b>Screen</b><small>On</small></span></button>
       </div>
       <div class="srcwrap">
-        <button class="src" data-src="camera" data-on="true" aria-haspopup="menu"><svg class="ic main"><use href="assets/icons.svg#video"/></svg><span class="lbl"><b>Camera</b><small>FaceTime HD</small></span><svg class="ic chev"><use href="assets/icons.svg#chevron-down"/></svg></button>
-        <div class="menu" hidden><div class="mh">Camera</div>
-          <button aria-checked="true" data-v="FaceTime HD"><svg class="ic"><use href="assets/icons.svg#check"/></svg>FaceTime HD</button>
-          <button aria-checked="false" data-v="Insta360 Link"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Insta360 Link</button>
-          <hr><button aria-checked="false" data-v="off"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Turn the camera off</button></div>
+        <button class="src" data-src="camera" data-on="true" aria-haspopup="menu" aria-expanded="false"><svg class="ic main"><use href="assets/icons.svg#video"/></svg><span class="lbl"><b>Camera</b><small>FaceTime HD</small></span><svg class="ic chev"><use href="assets/icons.svg#chevron-down"/></svg></button>
+        <div class="menu" role="menu" hidden><div class="mh">Camera</div>
+          <button role="menuitemradio" aria-checked="true" data-v="FaceTime HD"><svg class="ic"><use href="assets/icons.svg#check"/></svg>FaceTime HD</button>
+          <button role="menuitemradio" aria-checked="false" data-v="Insta360 Link"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Insta360 Link</button>
+          <hr><button role="menuitemcheckbox" aria-checked="true" data-mirror><svg class="ic"><use href="assets/icons.svg#check"/></svg>Mirror my camera</button>
+          <hr><button role="menuitemradio" aria-checked="false" data-v="off"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Turn the camera off</button></div>
       </div>
       <div class="srcwrap">
-        <button class="src" data-src="mic" data-on="true" aria-haspopup="menu"><svg class="ic main"><use href="assets/icons.svg#mic"/></svg><span class="lbl"><b>Microphone</b><small>Shure MV7</small></span><svg class="ic chev"><use href="assets/icons.svg#chevron-down"/></svg><i class="lvl" id="lvl"></i></button>
-        <div class="menu" hidden><div class="mh">Microphone</div>
-          <button aria-checked="true" data-v="Shure MV7"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Shure MV7</button>
-          <button aria-checked="false" data-v="MacBook microphone"><svg class="ic"><use href="assets/icons.svg#check"/></svg>MacBook microphone</button>
-          <hr><button aria-checked="false" data-v="off"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Mute the microphone</button></div>
+        <button class="src" data-src="mic" data-on="true" aria-haspopup="menu" aria-expanded="false"><svg class="ic main"><use href="assets/icons.svg#mic"/></svg><span class="lbl"><b>Microphone</b><small>Shure MV7</small></span><svg class="ic chev"><use href="assets/icons.svg#chevron-down"/></svg><i class="lvl" id="lvl"></i></button>
+        <div class="menu" role="menu" hidden><div class="mh">Microphone</div>
+          <button role="menuitemradio" aria-checked="true" data-v="Shure MV7"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Shure MV7</button>
+          <button role="menuitemradio" aria-checked="false" data-v="MacBook microphone"><svg class="ic"><use href="assets/icons.svg#check"/></svg>MacBook microphone</button>
+          <hr><button role="menuitemradio" aria-checked="false" data-v="off"><svg class="ic"><use href="assets/icons.svg#check"/></svg>Mute the microphone</button></div>
       </div>
     </div>
 
     <div class="center">
+      <button class="discard mini" id="discard" title="Throw away this take"><svg class="ic lg"><use href="assets/icons.svg#trash-2"/></svg><span id="discardLbl">Discard</span></button>
       <span class="timer" id="timer">0:00</span>
-      <button class="recbtn" id="rec" aria-label="Start recording"><i></i></button>
+      <button class="recbtn" id="rec" aria-label="Start recording" title="Record (R)"><i></i></button>
       <span class="reclabel"><b id="recTitle">Start recording</b><span id="recSub">3 second countdown</span></span>
       <div class="while">
-        <button class="mini" id="pause"><svg class="ic lg"><use href="assets/icons.svg#pause"/></svg><span id="pauseLbl">Pause</span></button>
-        <button class="mini" id="restart"><svg class="ic lg"><use href="assets/icons.svg#rotate-ccw"/></svg>Start over</button>
-        <button class="mini" id="discard"><svg class="ic lg"><use href="assets/icons.svg#trash-2"/></svg>Discard</button>
+        <button class="mini" id="pause" title="Pause (P)"><svg class="ic lg"><use href="assets/icons.svg#pause"/></svg><span id="pauseLbl">Pause</span></button>
+        <button class="mini" id="restart" title="Start this clip again"><svg class="ic lg"><use href="assets/icons.svg#rotate-ccw"/></svg><span>Start over</span></button>
       </div>
     </div>
 
     <div class="end">
-      <button class="btn tall" id="scriptBtn" aria-pressed="false"><svg class="ic lg"><use href="assets/icons.svg#scroll-text"/></svg><span>Script</span></button>
+      <button class="btn tall" id="scriptBtn" aria-pressed="false" title="Script"><svg class="ic lg"><use href="assets/icons.svg#scroll-text"/></svg><span>Script</span></button>
     </div>
   </div>
 </footer>
+
+<div class="scrim" id="shareDlg" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <div class="dh"><h2 id="shTitle">Link copied</h2><button class="iconbtn" id="shClose" aria-label="Close"><svg class="ic"><use href="assets/icons.svg#x"/></svg></button></div>
+    <p class="xs muted" style="margin:0">You can send it now. LOOT is still writing the title and the captions, and the page fills them in by itself when they are ready.</p>
+    <div class="linkrow"><input class="input" id="shLink" readonly value="loot.bichakhchyan.com/v/9f3k2" aria-label="Share link"><button class="btn" id="shCopy">Copy again</button></div>
+    <div class="line"><label for="shLife">The link works for</label><select class="select" id="shLife" style="width:180px"><option>1 day</option><option selected>7 days</option><option>30 days</option><option>Until I turn it off</option></select></div>
+    <div class="two"><button class="btn outline" id="shGif" style="height:40px"><svg class="ic"><use href="assets/icons.svg#mail"/></svg>Copy GIF for email</button><a class="btn outline" href="watch.html" target="_blank" style="height:40px">Open the page</a></div>
+    <p class="xs muted" id="shGifNote" style="margin:0">Copy GIF for email turns on once the video is ready, in about a minute.</p>
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-top:var(--space-2)"><a class="btn quiet" href="editor.html">Edit this video</a><a class="btn primary" href="index.html" id="shDone">Done</a></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button id="toastUndo">Undo</button></div>
 
 <script>
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const B=document.body,frame=$('#frame');
 $$('.switch').forEach(s=>s.addEventListener('click',()=>s.setAttribute('aria-checked',s.getAttribute('aria-checked')!=='true')));
+const ic=n=>`<svg class="ic"><use href="assets/icons.svg#${n}"/></svg>`;
+function toast(text,undo){const t=$('#toast');$('#toastText').textContent=text;$('#toastUndo').hidden=!undo;$('#toastUndo').onclick=()=>{undo();t.hidden=true;};t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,undo?7000:3500);}
+const busy=()=>B.classList.contains('recording')||B.classList.contains('counting');
 
-// What you are recording
-const kinds={long:'Wide video, 16:9',short:'Vertical video, 9:16, up to 60 seconds',msg:'Camera only, with a link you can share',demo:'Screen and camera, with zoom on your clicks'};
-let kind='long',srcOn={screen:true,camera:true,mic:true};
+// Shape of the video (locked during a take)
+const shapes={wide:'16:9, for YouTube, messages and demos',tall:'9:16, for shorts, up to 60 seconds'};
+let shape='wide',srcOn={screen:true,camera:true,mic:true};
 function layout(){
-  frame.classList.toggle('vertical',kind==='short');
+  frame.classList.toggle('vertical',shape==='tall');
   frame.classList.toggle('nocam',!srcOn.camera);
-  frame.dataset.layout=(!srcOn.screen||kind==='msg')?'cam':'bubble';
+  frame.dataset.layout=!srcOn.screen?'cam':'bubble';
+  $('#hint').textContent=srcOn.screen?'With Screen on, your browser asks which tab or window to share when you press Record. LOOT then shows a small controller on top of it, so you can pause or stop without coming back here.':'Screen is off, so only your camera is recorded. Good for a quick video message.';
 }
-$('#kind').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#kind button').forEach(x=>x.setAttribute('aria-pressed',x===b));kind=b.dataset.k;$('#what').textContent=kinds[kind];layout();});
+$('#shape').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||busy())return;$$('#shape button').forEach(x=>x.setAttribute('aria-pressed',x===b));shape=b.dataset.k;$('#what').textContent=shapes[shape];layout();});
 
-// Source menus
-function closeMenus(){$$('.srcwrap .menu').forEach(m=>m.hidden=true);}
-$$('.src').forEach(btn=>{const menu=btn.nextElementSibling;btn.title=$('b',btn).textContent;
-  btn.addEventListener('click',e=>{e.stopPropagation();const open=menu.hidden;closeMenus();menu.hidden=!open;});
-  menu.addEventListener('click',e=>{const o=e.target.closest('button');if(!o)return;$$('button',menu).forEach(x=>x.setAttribute('aria-checked',x===o));
-    const off=o.dataset.v==='off';btn.dataset.on=!off;$('small',btn).textContent=off?'Off':o.dataset.v;srcOn[btn.dataset.src]=!off;layout();closeMenus();});});
+// Screen is a plain on/off switch. Camera and microphone open a list.
+$('.src.toggle').onclick=e=>{const b=e.currentTarget;const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);b.dataset.on=on;$('small',b).textContent=on?'On':'Off';srcOn.screen=on;layout();};
+function closeMenus(){$$('.srcwrap .menu').forEach(m=>m.hidden=true);$$('.src[aria-haspopup]').forEach(b=>b.setAttribute('aria-expanded','false'));}
+$$('.src[aria-haspopup]').forEach(btn=>{const menu=btn.nextElementSibling;btn.title=$('b',btn).textContent;
+  btn.addEventListener('click',e=>{e.stopPropagation();const open=menu.hidden;closeMenus();menu.hidden=!open;btn.setAttribute('aria-expanded',open);if(open)($('[aria-checked="true"]',menu)||$('button',menu)).focus();});
+  menu.addEventListener('click',e=>{const o=e.target.closest('button');if(!o)return;
+    if(o.hasAttribute('data-mirror')){e.stopPropagation();const on=o.getAttribute('aria-checked')!=='true';o.setAttribute('aria-checked',on);frame.classList.toggle('mirror',on);return;}
+    $$('button:not([data-mirror])',menu).forEach(x=>x.setAttribute('aria-checked',x===o));
+    const off=o.dataset.v==='off';btn.dataset.on=!off;$('small',btn).textContent=off?'Off':o.dataset.v;srcOn[btn.dataset.src]=!off;layout();closeMenus();btn.focus();});
+  menu.addEventListener('keydown',e=>{const items=$$('button',menu),i=items.indexOf(document.activeElement);
+    if(e.key==='ArrowDown'){e.preventDefault();items[(i+1)%items.length].focus();}
+    if(e.key==='ArrowUp'){e.preventDefault();items[(i-1+items.length)%items.length].focus();}
+    if(e.key==='Escape'){e.stopPropagation();closeMenus();btn.focus();}});});
 document.addEventListener('click',closeMenus);
 setInterval(()=>{$('#lvl').style.width=(15+Math.random()*60)+'%';},140);
 
@@ -272,51 +315,93 @@ function setScript(open){B.classList.toggle('script-open',open);$('#scriptBtn').
 $('#scriptBtn').onclick=()=>setScript(!B.classList.contains('script-open'));
 $('#scriptClose').onclick=()=>setScript(false);
 
-// Clips
-let clips=[],retaking=null;
+// Clips. Every one can be played, retaken or deleted, and each of those can be undone.
+let clips=[],retaking=null,playing=null;
 const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+function clipFrame(k){return `<div class="frame bg-brand" data-layout="${k.l}">${k.l==='cam'?'':'<div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div></div></div></div>'}<div class="cam"><img src="assets/avatar-256.png" alt=""></div></div>`;}
 function renderClips(fresh){
   B.classList.toggle('has-clips',clips.length>0);
   const c=$('#clips');c.innerHTML='';
-  clips.forEach((k,i)=>{const n=i+1,d=document.createElement('div');d.className='clip'+(n===retaking?' retaking':'')+(n===fresh?' fresh':'');
-    d.innerHTML=`<div class="frame bg-brand${k.v?' ':''}" data-layout="${k.l}">${k.l==='cam'?'':'<div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div></div></div></div>'}<div class="cam"><img src="assets/avatar-256.png" alt=""></div></div>
-    <div class="acts"><button data-retake="${n}">Retake</button><button data-del="${n}">Delete</button></div>
-    <div class="meta"><span>Clip ${n}</span><span>${fmt(k.len)}</span></div>`;c.appendChild(d);});
+  clips.forEach((k,i)=>{const n=i+1,d=document.createElement('div');d.className='clip'+(n===fresh?' fresh':'')+(n===playing?' playing':'');
+    d.innerHTML=`<button class="thumbbtn" data-play="${n}" aria-label="Watch clip ${n}">${clipFrame(k)}<span class="pl"><span>${ic('play')}</span></span>${k.fail?'<span class="fail">Not uploaded</span>':''}</button>
+    <div class="meta"><span>Clip ${n} · ${fmt(k.len)}</span><span style="display:flex"><button class="iconbtn" data-retake="${n}" title="Record this clip again" aria-label="Retake clip ${n}">${ic('rotate-ccw')}</button><button class="iconbtn" data-del="${n}" title="Delete this clip" aria-label="Delete clip ${n}">${ic('trash-2')}</button></span></div>`;c.appendChild(d);});
   $('#sum').textContent=clips.length?`${clips.length} ${clips.length===1?'clip':'clips'}, ${fmt(clips.reduce((a,k)=>a+k.len,0))}`:'';
+  const bad=clips.findIndex(k=>k.fail);$('#upFail').hidden=bad<0;if(bad>=0)$('#upFail .grow').firstChild.textContent=`Clip ${bad+1} didn't upload.`;
+  $('#shareNow').disabled=bad>=0;
+  $('#editBtn').classList.toggle('primary',bad<0);$('#editBtn').setAttribute('aria-disabled',bad>=0);$('#editBtn').style.pointerEvents=bad>=0?'none':'';$('#editBtn').style.opacity=bad>=0?.45:'';
   idleLabel();
 }
-function idleLabel(){$('#recTitle').textContent=retaking?`Retake clip ${retaking}`:clips.length?'Record another clip':'Start recording';$('#recSub').textContent=retaking?'Replaces the old take':'3 second countdown';$('#rec').setAttribute('aria-label',$('#recTitle').textContent);}
-$('#clips').addEventListener('click',e=>{const r=e.target.closest('[data-retake]'),d=e.target.closest('[data-del]');
-  if(r){retaking=+r.dataset.retake;renderClips();start();}
-  if(d){clips.splice(+d.dataset.del-1,1);renderClips();}});
+function idleLabel(){$('#recTitle').textContent=retaking?`Retake clip ${retaking}`:clips.length?'Record another clip':'Start recording';$('#recSub').textContent=retaking?'Keeps the old take until you stop':'3 second countdown';$('#rec').setAttribute('aria-label',$('#recTitle').textContent);$('#badgeText').textContent=retaking?`Retaking clip ${retaking}`:`Recording clip ${clips.length+1}`;}
+function review(n){playing=n;B.classList.add('reviewing');frame.dataset.layout=clips[n-1].l;$('#badgeText').textContent=`Watching clip ${n}`;renderClips();}
+function live(){playing=null;B.classList.remove('reviewing');layout();renderClips();}
+$('#backLive').onclick=live;
+$('#clips').addEventListener('click',e=>{const p=e.target.closest('[data-play]'),r=e.target.closest('[data-retake]'),d=e.target.closest('[data-del]');
+  if(p&&!busy())return review(+p.dataset.play);
+  if(r&&!busy()){live();retaking=+r.dataset.retake;renderClips();start();}
+  if(d&&!busy()){const idx=+d.dataset.del-1,gone=clips[idx];clips.splice(idx,1);if(playing)live();renderClips();toast(`Clip ${idx+1} deleted.`,()=>{clips.splice(idx,0,gone);renderClips();});}});
 
 // Record flow
 let cd,tick,secs=0;
-const show=()=>{$('#timer').textContent=$('#badgeTime').textContent=fmt(secs);};
-function start(){closeMenus();B.classList.remove('recording','paused');B.classList.add('counting');let n=3;$('#cdNum').textContent=n;clearInterval(cd);clearInterval(tick);
+const show=()=>{$('#timer').textContent=fmt(secs);};
+function start(){closeMenus();if(playing)live();B.classList.remove('recording','paused');B.classList.add('counting');idleLabel();let n=3;$('#cdNum').textContent=n;clearInterval(cd);clearInterval(tick);
   cd=setInterval(()=>{n--;if(n<=0)go();else $('#cdNum').textContent=n;},800);}
 function run(){clearInterval(tick);tick=setInterval(()=>{secs++;show();},1000);}
-function go(){clearInterval(cd);B.classList.remove('counting','paused');B.classList.add('recording');$('#rec').setAttribute('aria-label','Stop recording');$('#pauseLbl').textContent='Pause';secs=0;show();run();}
-function stop(save){clearInterval(tick);clearInterval(cd);const was=B.classList.contains('recording');B.classList.remove('recording','counting','paused');
-  let fresh=null;if(save&&was){const c={len:Math.max(secs,3),l:frame.dataset.layout};if(retaking){clips[retaking-1]=c;fresh=retaking;}else{clips.push(c);fresh=clips.length;}}
+function go(){clearInterval(cd);B.classList.remove('counting','paused');B.classList.add('recording');$('#rec').setAttribute('aria-label','Stop recording');$('#rec').title='Stop (R)';$('#pauseLbl').textContent='Pause';secs=0;show();run();$('#shape').dataset.locked=true;}
+function stop(save){clearInterval(tick);clearInterval(cd);const was=B.classList.contains('recording');B.classList.remove('recording','counting','paused');$('#rec').title='Record (R)';$('#shape').dataset.locked=false;disarm();
+  let fresh=null;
+  if(save&&was){const c={len:Math.max(secs,3),l:frame.dataset.layout};
+    if(retaking){const idx=retaking-1,old=clips[idx];clips[idx]=c;fresh=retaking;retaking=null;renderClips(fresh);toast(`Clip ${idx+1} replaced with the new take.`,()=>{clips[idx]=old;renderClips();});return;}
+    clips.push(c);fresh=clips.length;}
   retaking=null;renderClips(fresh);}
 $('#countdown').onclick=go;
 $('#rec').onclick=()=>B.classList.contains('recording')?stop(true):B.classList.contains('counting')?stop(false):start();
-$('#discard').onclick=()=>stop(false);
+$('#pause').onclick=()=>{const p=B.classList.toggle('paused');$('#pauseLbl').textContent=p?'Resume':'Pause';$('#badgeText').textContent=p?'Paused':idleBadge();if(p)clearInterval(tick);else run();};
+const idleBadge=()=>retaking?`Retaking clip ${retaking}`:`Recording clip ${clips.length+1}`;
 $('#restart').onclick=start;
-$('#pause').onclick=()=>{const p=B.classList.toggle('paused');$('#pauseLbl').textContent=p?'Resume':'Pause';if(p)clearInterval(tick);else run();};
+// Discard needs a second click, so it can't be hit by accident next to Pause
+let armT;function disarm(){clearTimeout(armT);$('#discard').classList.remove('arm');$('#discardLbl').textContent='Discard';}
+$('#discard').onclick=()=>{if($('#discard').classList.contains('arm')){disarm();const was=secs;stop(false);toast('Take discarded.',null);return;}
+  $('#discard').classList.add('arm');$('#discardLbl').textContent='Sure?';armT=setTimeout(disarm,3000);};
+document.addEventListener('keydown',e=>{
+  if(e.target.closest('textarea,input,select,[contenteditable="true"]'))return;
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  const k=e.key.toLowerCase();
+  if(!$('#shareDlg').hidden)return;
+  if(k==='r'&&!B.classList.contains('noperm'))$('#rec').click();
+  if(k==='p'&&B.classList.contains('recording'))$('#pause').click();
+  if(k==='escape'&&B.classList.contains('counting'))stop(false);
+});
 renderClips();
+frame.classList.add('mirror');
+// Share now: skip the editor and get a link straight away
+let shFocus=null;
+function closeShare(){$('#shareDlg').hidden=true;if(shFocus)shFocus.focus();}
+$('#shareNow').onclick=()=>{if(busy())return;shFocus=$('#shareNow');$('#shareDlg').hidden=false;$('#shCopy').focus();
+  // the GIF is made from the finished video, so its button waits for it
+  $('#shGif').disabled=true;$('#shGifNote').hidden=false;setTimeout(()=>{$('#shGif').disabled=false;$('#shGifNote').hidden=true;},5000);};
+$('#shLink').onfocus=e=>e.target.select();
+$('#shClose').onclick=closeShare;
+$('#shareDlg').addEventListener('click',e=>{if(e.target.id==='shareDlg')closeShare();});
+$('#shCopy').onclick=e=>{e.currentTarget.textContent='Copied';};
+$('#shGif').onclick=()=>toast('GIF copied. Paste it into your email.');
+$('#shLife').onchange=e=>toast(e.target.value.startsWith('Until')?'The link now works until you turn it off.':'The link now works for '+e.target.value+'.');
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#shareDlg').hidden)closeShare();});
 
 // Other moments, opened with ?state=... (see states.html)
 const state=new URLSearchParams(location.search).get('state');
-function noPerm(id){B.classList.add('noperm');frame.hidden=true;frame.style.display='none';$(id).hidden=false;$$('.src small').forEach(x=>x.textContent='Not allowed yet');$('#recTitle').textContent='Recording is off';$('#recSub').textContent='Allow access first';}
+function noPerm(id){B.classList.add('noperm');frame.hidden=true;frame.style.display='none';$('.shape').style.display='none';$('#hint').style.display='none';$(id).hidden=false;$$('.src small').forEach(x=>x.textContent='Not allowed yet');$('#recTitle').textContent='Recording is off';$('#recSub').textContent='Allow access first';}
 if(state==='permission'){noPerm('#askPerm');$('#allow').onclick=()=>location.href='recorder.html';}
-if(state==='blocked')noPerm('#blocked');
-if(state==='nomic'){const mic=$('.src[data-src="mic"]');mic.classList.add('bad');$('#noSound').hidden=false;$('#pickMic').onclick=e=>{e.stopPropagation();closeMenus();mic.nextElementSibling.hidden=false;};
+if(state==='blocked'){noPerm('#blocked');$$('.src small').forEach(x=>x.textContent='Blocked');}
+if(state==='nomic'){const mic=$('.src[data-src="mic"]');mic.classList.add('bad');$('#noSound').hidden=false;$('#pickMic').onclick=e=>{e.stopPropagation();closeMenus();const m=mic.nextElementSibling;m.hidden=false;mic.setAttribute('aria-expanded','true');$('button',m).focus();};
   mic.nextElementSibling.addEventListener('click',()=>{mic.classList.remove('bad');$('#noSound').hidden=true;});}
-if(state==='uploadfail'){clips=[{len:42,l:'cam'},{len:70,l:'bubble'}];renderClips();
-  const c2=$$('.clip')[1];const f=document.createElement('span');f.className='fail';f.textContent='Not uploaded';c2.appendChild(f);$('#upFail').hidden=false;
-  $('#retryUp').onclick=()=>{$('#upFail').hidden=true;f.remove();};}
+if(state==='quietmic'){const mic=$('.src[data-src="mic"]');mic.classList.add('bad');$('#noSound').hidden=false;
+  $('#noSound .grow').innerHTML='<b>Your microphone is very quiet.</b> LOOT will raise the volume afterwards, but it sounds better if you move closer or pick another microphone.';
+  $('#pickMic').onclick=e=>{e.stopPropagation();closeMenus();const m=mic.nextElementSibling;m.hidden=false;mic.setAttribute('aria-expanded','true');$('button',m).focus();};
+  mic.nextElementSibling.addEventListener('click',()=>{mic.classList.remove('bad');$('#noSound').hidden=true;});}
+if(state==='shared'){clips=[{len:42,l:'cam'}];renderClips();$('#shareNow').click();}
+if(state==='uploadfail'){clips=[{len:42,l:'cam'},{len:70,l:'bubble',fail:true},{len:38,l:'bubble'}];renderClips();
+  $('#retryUp').onclick=()=>{clips.forEach(k=>delete k.fail);renderClips();toast('Clip 2 uploaded.');};}
+if(state==='recording'){clips=[{len:42,l:'cam'},{len:70,l:'bubble'}];renderClips();start();$('#countdown').click();}
 </script>
 </body>
 </html>

@@ -10,45 +10,60 @@
   .wrap{max-width:1320px;margin:0 auto;padding:var(--space-7) var(--space-6) var(--space-9)}
   .head{display:flex;align-items:center;gap:var(--space-4);margin-bottom:var(--space-5);flex-wrap:wrap}
   .head h1{font-size:24px;line-height:32px}
-  .record{margin-left:auto;height:44px;padding:0 20px 0 16px;font-size:15px;gap:10px}
+  .headacts{margin-left:auto;display:flex;gap:var(--space-2);flex-wrap:wrap}
+  .upload{height:44px;padding:0 16px;font-size:15px}
+  .record{height:44px;padding:0 20px 0 16px;font-size:15px;gap:10px}
   .record i{width:12px;height:12px;border-radius:50%;background:var(--record);display:block}
-  .filters{display:inline-flex;margin-bottom:var(--space-5)}
+  .bar-row{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-5)}
+  .filters{display:inline-flex}
   .filters button{padding:6px 14px;font-size:var(--fs-sm)}
+  .filters button[hidden]{display:none}
+  .filters .n{color:var(--warn);margin-left:4px}
+  .pending{margin-bottom:var(--space-5)}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--space-6) var(--space-5)}
-  .card{display:flex;flex-direction:column;gap:10px;color:inherit;text-decoration:none;min-width:0}
-  .card:hover{text-decoration:none}
+  .card{display:flex;flex-direction:column;gap:10px;min-width:0;position:relative}
+  .card.gone{display:none}
+  .open{color:inherit;text-decoration:none;display:flex;flex-direction:column;gap:10px;border-radius:8px}
+  .open:hover{text-decoration:none}
   .thumb{position:relative;border-radius:8px;overflow:hidden;background:var(--stage)}
   .thumb .frame{border-radius:0}
   .thumb::after{content:"";position:absolute;inset:0;border-radius:8px;box-shadow:inset 0 0 0 1px var(--line);pointer-events:none;transition:box-shadow var(--dur-fast) var(--ease)}
-  .card:hover .thumb::after,.card:focus-visible .thumb::after{box-shadow:inset 0 0 0 2px var(--purple-soft)}
-  .card:focus-visible{box-shadow:none}
-  .playover{position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,17,24,.35);opacity:0;transition:opacity var(--dur-fast) var(--ease);z-index:3}
-  .playover span{width:44px;height:44px;border-radius:50%;background:rgba(246,246,244,.94);color:#1A1620;display:grid;place-items:center}
-  .playover .ic{width:18px;height:18px;margin-left:2px}
-  .card:hover .playover{opacity:1}
+  .open:hover .thumb::after,.open:focus-visible .thumb::after{box-shadow:inset 0 0 0 2px var(--purple-soft)}
+  .hover{position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,17,24,.45);opacity:0;transition:opacity var(--dur-fast) var(--ease);z-index:3}
+  .hover span{display:inline-flex;align-items:center;gap:8px;background:rgba(246,246,244,.95);color:#1A1620;font-size:var(--fs-sm);font-weight:600;padding:8px 14px;border-radius:999px}
+  .open:hover .hover,.open:focus-visible .hover{opacity:1}
   .dur{position:absolute;right:8px;bottom:8px;background:rgba(20,17,24,.88);font-size:var(--fs-xs);font-variant-numeric:tabular-nums;padding:2px 6px;border-radius:4px;z-index:4}
   .state{position:absolute;left:8px;top:8px;z-index:4;display:inline-flex;align-items:center;gap:6px;background:rgba(20,17,24,.9);font-size:var(--fs-xs);line-height:22px;padding:0 8px;border-radius:4px}
-  .bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(246,246,244,.15);z-index:4}
-  .bar i{display:block;height:100%;background:var(--warn)}
-  .info{display:flex;gap:var(--space-2);align-items:flex-start}
-  .info .t{font-size:var(--fs-md);line-height:var(--lh-md);font-weight:var(--fw-medium);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .info .m{font-size:var(--fs-xs);color:var(--fg-muted);margin-top:3px}
-  .info .iconbtn{margin-left:auto;margin-top:-4px}
-  .info .iconbtn.todo{color:var(--warn)}
+  .pbar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(246,246,244,.15);z-index:4}
+  .pbar i{display:block;height:100%;background:var(--warn);transition:width .4s linear}
+  .pbar.dl i{background:var(--purple-soft)}
+  .info{display:flex;gap:var(--space-1);align-items:flex-start;padding-right:72px}
+  .t{font-size:var(--fs-md);line-height:var(--lh-md);font-weight:var(--fw-medium);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;border-radius:4px}
+  .t[contenteditable="true"]{display:block;outline:2px solid var(--purple-soft);outline-offset:2px;padding:0 2px}
+  .m{font-size:var(--fs-xs);color:var(--fg-muted);margin-top:3px}
+  .acts{position:absolute;right:0;bottom:calc(var(--lh-md) + 21px - 32px);display:flex;gap:2px}
+  .acts .iconbtn.todo{color:var(--warn)}
+  .acts .menu{right:0;top:calc(100% + 4px)}
 
   /* Thumbnail artwork (stand-ins for real video frames) */
-  .tt{position:absolute;left:6%;top:16%;width:58%;font-weight:700;color:#fff;font-size:19px;line-height:1.12;letter-spacing:-.2px;z-index:2}
-  .frame.title .cam{width:38%;right:4%;bottom:-6%;box-shadow:none;background:radial-gradient(circle at 50% 45%,#6A578F,transparent 70%)}
+  .tt{position:absolute;left:6%;top:18%;width:58%;font-weight:700;color:#fff;font-size:19px;line-height:1.12;letter-spacing:-.2px;z-index:2}
+  .frame.title .cam{width:38%;right:4%;bottom:-6%;box-shadow:none;background:transparent}
   .vert{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#141118}
   .vert .v{height:100%;aspect-ratio:9/16;position:relative;overflow:hidden;background:radial-gradient(120% 80% at 50% 20%,#3a2a55,#141118)}
   .vert .v img{position:absolute;bottom:0;left:-10%;width:120%}
-  .vert .v span{position:absolute;left:8%;right:8%;top:26%;font-size:9px;font-weight:700;color:#fff;line-height:1.15}
+  .vert .v span{position:absolute;left:8%;right:8%;top:24%;font-size:11px;font-weight:700;color:#fff;line-height:1.15}
 
+  .gtag{position:absolute;left:8px;top:8px;background:rgba(20,17,24,.85);font-size:11px;font-weight:700;padding:1px 6px;border-radius:3px;z-index:3;color:#fff}
+  .gplay{position:absolute;inset:0;margin:auto;width:44px;height:44px;border-radius:50%;background:rgba(246,246,244,.95);color:#1A1620;display:grid;place-items:center;z-index:3}
+  .gplay .ic{width:16px;height:16px;margin-left:2px}
   @media (max-width:560px){
     .wrap{padding:var(--space-5) var(--space-4) var(--space-8)}
-    .record{margin-left:0;width:100%;justify-content:center}
-    .grid{grid-template-columns:1fr 1fr;gap:var(--space-5) var(--space-3)}
+    .headacts{margin-left:0;width:100%}
+    .record,.upload{flex:1;justify-content:center}
+    .topbar .lbl{display:none}
+    .grid{grid-template-columns:1fr;gap:var(--space-5)}
+    .topbar .storage .label-long{display:none}
   }
 </style>
 </head>
@@ -56,28 +71,46 @@
 <header class="topbar">
   <a class="wordmark" href="index.html">LOOT</a>
   <div class="right">
-    <a class="btn quiet" href="brand.html"><svg class="ic"><use href="assets/icons.svg#palette"/></svg>Brand settings</a>
+    <span class="storage" id="storage" title="Space used on the server. Finished videos leave the server once you download them.">
+      <span class="label-long">Server space</span> <span id="storageText">3.1 of 100 GB</span>
+      <span class="meter-bar"><i id="storageBar" style="width:3%"></i></span>
+    </span>
+    <a class="btn quiet" href="brand.html"><svg class="ic"><use href="assets/icons.svg#palette"/></svg><span class="lbl">Brand settings</span></a>
+    <button class="btn quiet" id="signOut" title="Sign out of LOOT"><svg class="ic"><use href="assets/icons.svg#log-out"/></svg><span class="lbl">Sign out</span></button>
   </div>
 </header>
 
 <main class="wrap">
   <div class="head">
     <h1 class="page-title">Your videos</h1>
-    <a class="btn primary record" href="recorder.html"><i></i>Record a video</a>
+    <div class="headacts">
+      <button class="btn outline upload" id="uploadBtn" title="Add a video file you already have"><svg class="ic"><use href="assets/icons.svg#upload"/></svg>Upload a video</button>
+      <input type="file" id="uploadFile" accept="video/*" hidden>
+      <a class="btn primary record" id="recordBtn" href="recorder.html" title="Shortcut: R"><i></i>Record a video</a>
+    </div>
   </div>
 
-  <div class="seg filters" id="filters" role="group" aria-label="Show">
-    <button aria-pressed="true" data-f="all">All</button>
-    <button aria-pressed="false" data-f="video">Videos</button>
-    <button aria-pressed="false" data-f="short">Shorts</button>
-    <button aria-pressed="false" data-f="message">Messages</button>
-  </div>
-
-  <div class="notice err" id="fullNotice" hidden style="margin-bottom:var(--space-5)">
+  <div class="notice err pending" id="fullNotice" hidden>
     <span class="dot"></span>
-    <span class="grow"><b>The server is out of space.</b> New recordings can't be processed until you download or delete finished videos.</span>
-    <button class="btn" id="showTodo">Show videos to download</button>
+    <span class="grow"><b>The server is out of space.</b> New recordings will wait until you download or delete finished videos.</span>
+    <button class="btn primary" data-dl-all>Download finished videos</button>
   </div>
+  <div class="notice warn pending" id="todoNotice" hidden>
+    <span class="dot"></span>
+    <span class="grow" id="todoText"></span>
+    <button class="btn" data-dl-all>Download them</button>
+  </div>
+
+  <div class="bar-row">
+    <div class="seg filters" id="filters" role="group" aria-label="Show">
+      <button aria-pressed="true" data-f="all">All</button>
+      <button aria-pressed="false" data-f="video">Videos</button>
+      <button aria-pressed="false" data-f="short">Shorts</button>
+      <button aria-pressed="false" data-f="message">Messages</button>
+      <button aria-pressed="false" data-f="todo" id="todoFilter">Not downloaded<span class="n" id="todoN"></span></button>
+    </div>
+  </div>
+
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty" hidden>
     <span class="badge"><svg class="ic"><use href="assets/icons.svg#video"/></svg></span>
@@ -85,25 +118,43 @@
     <p>Record your first one and it will show up here.</p>
     <a class="btn primary lg" href="recorder.html">Record a video</a>
   </div>
+  <div class="empty" id="emptyFilter" hidden>
+    <h2>Nothing here</h2>
+    <p>Every finished video is on your drive.</p>
+    <button class="btn" id="showAll">Show all videos</button>
+  </div>
 </main>
 
-<div class="toast" id="toast" hidden><span id="toastText"></span></div>
+<div class="scrim" id="gifDlg" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="gifTitle" style="width:min(380px,100%)">
+    <div class="dh"><h2 id="gifTitle">GIF copied</h2><button class="iconbtn" id="gifClose" aria-label="Close"><svg class="ic"><use href="assets/icons.svg#x"/></svg></button></div>
+    <div class="frame bg-brand" data-layout="cam"><div class="cam"><img src="assets/avatar-256.png" alt=""></div><span class="gtag">GIF</span><span class="gplay"><svg class="ic fill"><use href="assets/icons.svg#play"/></svg></span></div>
+    <p class="xs muted" id="gifNote" style="margin:0">Paste it into your email. It shows the first 3 seconds on a loop, without sound, and opens the share page when clicked.</p>
+    <div style="display:flex;justify-content:space-between;gap:8px"><button class="btn" id="gifDl"><svg class="ic"><use href="assets/icons.svg#download"/></svg>Download the GIF</button><span style="display:flex;gap:8px"><button class="btn primary" id="gifCopy" hidden><svg class="ic"><use href="assets/icons.svg#mail"/></svg>Copy the GIF</button><button class="btn primary" id="gifOk">Done</button></span></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button id="toastUndo">Undo</button></div>
 
 <script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const shot='<div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div><div class="row"></div><div class="row"></div></div></div></div>';
 const cam='<div class="cam"><img src="assets/avatar-256.png" alt=""></div>';
 const ic=n=>`<svg class="ic"><use href="assets/icons.svg#${n}"/></svg>`;
-// state: undefined = downloaded and done. "todo" = finished but not downloaded yet. "busy" = processing.
+const icl=n=>`<svg class="ic lead"><use href="assets/icons.svg#${n}"/></svg>`;
+/* s: "busy" = still processing, "server" = finished but only on the server, "shared" = a message with a live link,
+   "drive" = downloaded to the drive (the server copy is gone). */
 const items=[
- {t:'How I plan a paid media test on a small budget',k:'video',d:'12:40',when:'Edited today',art:'title',href:'editor.html'},
- {t:'Walkthrough of the job tracker board',k:'video',d:'3:20',when:'Recorded today',art:'demo',busy:64,href:'editor.html'},
- {t:'Write one question first',k:'short',d:'0:48',when:'Made today',art:'short',state:'todo',href:'shorts.html'},
- {t:'Thanks for the introduction',k:'message',d:'1:05',when:'10 Nov',art:'cam',state:'todo',href:'editor.html'},
- {t:'What I learned running inbound',k:'video',d:'18:02',when:'6 Nov',art:'title',href:'editor.html'},
- {t:'Daily Reads in two minutes',k:'video',d:'2:04',when:'4 Nov',art:'side',href:'editor.html'},
- {t:'Cost per qualified lead, explained',k:'short',d:'0:55',when:'28 Oct',art:'short',href:'shorts.html'},
- {t:'Follow-up after our call',k:'message',d:'2:31',when:'3 Nov',art:'cam',href:'editor.html'},
+ {id:1,t:'How I plan a paid media test on a small budget',k:'video',d:'12:40',when:'Edited today',art:'title',s:'drive',href:'editor.html'},
+ {id:2,t:'Walkthrough of the job tracker board',k:'video',d:'3:20',when:'Recorded today',art:'demo',s:'busy',p:64,href:'editor.html?state=processing'},
+ {id:3,t:'Write one question first',k:'short',d:'0:48',when:'Made today',art:'short',s:'server',href:'shorts.html'},
+ {id:4,t:'Thanks for the introduction',k:'message',d:'1:05',when:'10 Nov',art:'cam',s:'shared',href:'editor.html'},
+ {id:5,t:'What I learned running inbound',k:'video',d:'18:02',when:'6 Nov',art:'title',s:'server',href:'editor.html'},
+ {id:6,t:'Daily Reads in two minutes',k:'video',d:'2:04',when:'4 Nov',art:'side',s:'drive',href:'editor.html'},
+ {id:7,t:'Cost per qualified lead, explained',k:'short',d:'0:55',when:'28 Oct',art:'short',s:'drive',href:'shorts.html'},
+ {id:8,t:'Follow-up after our call',k:'message',d:'2:31',when:'3 Nov',art:'cam',s:'shared',href:'editor.html'},
 ];
+const kind={video:'Video',short:'Short',message:'Message'};
 function art(i){
   if(i.art==='title')return `<div class="frame bg-brand title"><div class="tt">${i.t}</div>${cam}</div>`;
   if(i.art==='demo')return `<div class="frame bg-brand">${shot}${cam}</div>`;
@@ -111,27 +162,121 @@ function art(i){
   if(i.art==='cam')return `<div class="frame bg-brand" data-layout="cam">${cam}</div>`;
   return `<div class="frame"><div class="vert"><div class="v"><span>${i.t}</span><img src="assets/avatar-256.png" alt=""></div></div></div>`;
 }
-const kind={video:'Video',short:'Short',message:'Message'};
-const grid=document.getElementById('grid');
-function render(f){
-  grid.innerHTML='';
-  items.filter(i=>f==='all'||i.k===f).forEach(i=>{
-    const a=document.createElement('a');a.className='card';a.href=i.href;
-    const state=i.busy?`<span class="state"><span class="dot st-warn"></span>Processing, ${i.busy}%</span>`:i.state==='todo'?`<span class="state"><span class="dot st-warn"></span>Not downloaded yet</span>`:'';
-    a.innerHTML=`<div class="thumb">${art(i)}${state}<span class="playover"><span>${ic('play')}</span></span><span class="dur">${i.d}</span>${i.busy?`<span class="bar"><i style="width:${i.busy}%"></i></span>`:''}</div>
-    <div class="info"><div><div class="t">${i.t}</div><div class="m">${kind[i.k]} · ${i.when}</div></div>${i.busy?'':`<button class="iconbtn ${i.state==='todo'?'todo':''}" title="Download to my drive" aria-label="Download ${i.t}" data-dl>${ic('download')}</button>`}</div>`;
-    grid.appendChild(a);
-  });
+function badge(i){
+  if(i.s==='uploading')return `<span class="state"><span class="spin" style="width:12px;height:12px;border-width:2px"></span>Uploading, ${i.p}%</span>`;
+  if(i.s==='sharing')return `<span class="state"><span class="spin" style="width:12px;height:12px;border-width:2px"></span>Preparing the shared video</span>`;
+  if(i.s==='busy')return `<span class="state"><span class="dot st-warn"></span>Processing, ${i.p}%</span>`;
+  if(i.s==='server')return `<span class="state"><span class="dot st-warn"></span>Only on the server</span>`;
+  if(i.s==='downloading')return `<span class="state"><span class="spin" style="width:12px;height:12px;border-width:2px"></span>Downloading</span>`;
+  if(i.s==='shared')return `<span class="state">${ic('link')}Shared link</span>`;
+  return '';
 }
-render('all');
+function where(i){
+  if(i.s==='drive')return 'On your drive';
+  if(i.s==='shared')return 'Link works until '+(i.until||'19 Nov');
+  if(i.s==='server')return 'Not downloaded, '+(i.left||'2 days')+' left on the server';
+  return '';
+}
+let filter='all';
+const grid=$('#grid');
+function render(){
+  grid.innerHTML='';
+  const list=items.filter(i=>!i.deleted&&(filter==='all'||(filter==='todo'?i.s==='server':i.k===filter)));
+  list.forEach(i=>{
+    const c=document.createElement('article');c.className='card';c.dataset.id=i.id;
+    const openLabel=i.k==='short'?'Open shorts':'Open in editor';
+    c.innerHTML=`<a class="open" href="${i.href}">
+        <div class="thumb">${art(i)}${badge(i)}<span class="hover"><span>${ic(i.k==='short'?'smartphone':'scissors')}${openLabel}</span></span><span class="dur">${i.d}</span>${i.s==='busy'||i.s==='uploading'?`<span class="pbar${i.s==='uploading'?' dl':''}"><i style="width:${i.p}%"></i></span>`:''}${i.s==='downloading'?`<span class="pbar dl"><i style="width:${i.dp||5}%"></i></span>`:''}</div>
+        <div class="info"><div><div class="t">${i.t}</div><div class="m">${[kind[i.k],i.when,where(i)].filter(Boolean).join(' · ')}</div></div></div>
+      </a>
+      <div class="acts">
+        ${i.s==='busy'||i.s==='uploading'?'':`<button class="iconbtn ${i.s==='server'?'todo':''}" data-dl title="Download to my drive" aria-label="Download ${i.t}">${ic('download')}</button>`}
+        <div class="menuwrap"><button class="iconbtn" data-more aria-haspopup="menu" aria-expanded="false" aria-label="More for ${i.t}"><svg class="ic" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+          <div class="menu" role="menu" hidden>
+            <button role="menuitem" data-act="rename">${icl('scroll-text')}Rename</button>
+            <button role="menuitem" data-act="link">${icl('link')}${i.s==='shared'?'Copy link':'Create a share link'}</button>
+            ${i.s==='shared'?`<button role="menuitem" data-act="gif">${icl('mail')}Copy GIF for email</button><button role="menuitem" data-act="unlink">${icl('x')}Turn off the link</button>`:''}
+            <hr><button role="menuitem" class="danger" data-act="delete">${icl('trash-2')}Delete from LOOT</button>
+          </div></div>
+      </div>`;
+    if(i.s==='uploading')c.querySelector('.menu').innerHTML='<button role="menuitem" data-act="cancel-upload">'+icl('x')+'Cancel the upload</button>';
+    grid.appendChild(c);
+  });
+  $('#emptyFilter').hidden=!(list.length===0&&!isEmptyState);
+  updateTodo();
+}
+function updateTodo(){
+  const n=items.filter(i=>!i.deleted&&i.s==='server').length;
+  $('#todoN').textContent=n||'';$('#todoFilter').hidden=n===0&&filter!=='todo';
+  $('#todoText').innerHTML=n?`<b>${n} finished ${n===1?'video is':'videos are'} only on the server.</b> LOOT deletes its copy 3 days after an export, so download ${n===1?'it':'them'} to keep ${n===1?'it':'them'}.`:'';
+  $('#todoNotice').hidden=!n||isFull||isEmptyState;
+}
+function toast(text,undo){const t=$('#toast');$('#toastText').textContent=text;$('#toastUndo').hidden=!undo;$('#toastUndo').onclick=()=>{undo();t.hidden=true;};t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,undo?6000:3000);}
+function closeMenus(){$$('.menu').forEach(m=>m.hidden=true);$$('[data-more]').forEach(b=>b.setAttribute('aria-expanded','false'));}
+function download(list){
+  list.forEach(i=>{i.s='downloading';i.dp=5;});render();
+  let p=5;const t=setInterval(()=>{p+=19;list.forEach(i=>i.dp=Math.min(p,100));render();
+    if(p>=100){clearInterval(t);list.forEach(i=>i.s='drive');render();toast(list.length===1?`Saved "${list[0].t}" to your drive.`:`Saved ${list.length} videos to your drive.`);setStorage();}},500);
+}
+grid.addEventListener('click',e=>{
+  const card=e.target.closest('.card');if(!card)return;const i=items.find(x=>x.id==card.dataset.id);
+  if(e.target.closest('[data-dl]')){if(i.s!=='downloading')download([i]);return;}
+  const more=e.target.closest('[data-more]');
+  if(more){e.stopPropagation();const m=more.nextElementSibling,open=m.hidden;closeMenus();m.hidden=!open;more.setAttribute('aria-expanded',open);if(open)m.querySelector('button').focus();return;}
+  const act=e.target.closest('[data-act]');if(!act)return;closeMenus();
+  const a=act.dataset.act;
+  if(a==='delete'){i.deleted=true;render();setStorage();toast(`Deleted "${i.t}". Copies you downloaded stay on your drive.`,()=>{i.deleted=false;render();setStorage();});}
+  if(a==='link'){if(i.s!=='shared'){const prev=i.s;i.s='shared';render();toast('Link created and copied. It works for 7 days. You can change that in the editor, under Export.',()=>{i.s=prev;render();});}else toast('Link copied.');}
+  if(a==='gif'){$('#gifDlg').hidden=false;$('#gifDl').focus();toast('GIF copied. Paste it into your email.');}
+  if(a==='cancel-upload'){clearInterval(i.tm);items.splice(items.indexOf(i),1);render();toast('Upload cancelled.');}
+  if(a==='unlink'){i.s='drive';render();toast('Link turned off. People who open it will see that it was turned off.',()=>{i.s='shared';render();});}
+  if(a==='rename'){const t=card.querySelector('.t');t.contentEditable='true';t.focus();document.getSelection().selectAllChildren(t);
+    const done=save=>{t.contentEditable='false';if(save){i.t=t.textContent.trim()||i.t;}render();};
+    t.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();done(true);}if(ev.key==='Escape')done(false);};t.onblur=()=>done(true);}
+});
+grid.addEventListener('click',e=>{const t=e.target.closest('.t[contenteditable="true"]');if(t)e.preventDefault();},true);
+document.addEventListener('click',closeMenus);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeMenus();
+  if(e.target.closest('input,textarea,[contenteditable="true"]'))return;
+  if(e.key.toLowerCase()==='r'&&!e.metaKey&&!e.ctrlKey)location.href='recorder.html';
+});
+$$('[data-dl-all]').forEach(b=>b.onclick=()=>{const list=items.filter(i=>!i.deleted&&i.s==='server');if(list.length)download(list);});
+$('#filters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#filters button').forEach(x=>x.setAttribute('aria-pressed',x===b));filter=b.dataset.f;render();});
+$('#showAll').onclick=()=>$('#filters [data-f="all"]').click();
+// Upload a video file: it shows as a card while it uploads, then processes like a recording
+$('#uploadBtn').onclick=()=>$('#uploadFile').click();
+function startUpload(name){const it={id:Date.now(),t:name.replace(/\.[a-z0-9]+$/i,''),k:'video',d:'',when:'Just now',art:'demo',s:'uploading',p:5,href:'editor.html?state=processing'};items.unshift(it);render();
+  it.tm=setInterval(()=>{it.p+=19;if(it.p>=100){clearInterval(it.tm);it.s='busy';it.p=10;it.d='4:12';toast('Upload finished. LOOT is writing the transcript.');}render();},600);}
+$('#uploadFile').onchange=e=>{const f=e.target.files[0];if(f)startUpload(f.name);e.target.value='';};
+const closeGif=()=>{$('#gifDlg').hidden=true;};
+$('#gifClose').onclick=$('#gifOk').onclick=closeGif;
+$('#gifDlg').addEventListener('click',e=>{if(e.target.id==='gifDlg')closeGif();});
+$('#gifDl').onclick=()=>toast('GIF saved to your Downloads folder.');
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGif();});
+$('#signOut').onclick=()=>toast('You would be signed out here and taken to the sign-in page.');
+
+// Server space: 3.1 GB normally, full in the "full" state
+let isFull=false,isEmptyState=false;
+function setStorage(){
+  const serverGB=items.filter(i=>!i.deleted&&i.s!=='drive').length*0.6+0.7;
+  const used=isFull?100:Math.round(serverGB*10)/10;
+  $('#storageText').textContent=`${used} of 100 GB`;$('#storageBar').style.width=Math.max(2,used)+'%';$('#storage').classList.toggle('full',used>=95);
+  if(isFull&&!items.some(i=>!i.deleted&&i.s==='server')){isFull=false;$('#fullNotice').hidden=true;$('#recordBtn').classList.add('primary');setStorage();}
+}
+
 // Other moments, opened with ?state=empty or ?state=full (see states.html)
-const state=new URLSearchParams(location.search).get('state');
-if(state==='empty'){grid.style.display='none';document.getElementById('filters').style.display='none';document.querySelector('.record').style.display='none';document.getElementById('empty').hidden=false;}
-if(state==='full'){document.getElementById('fullNotice').hidden=false;document.getElementById('showTodo').onclick=()=>{[...grid.children].forEach(c=>{if(!c.querySelector('.state')||c.querySelector('.bar'))c.style.display='none';});};}
-document.getElementById('filters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;document.querySelectorAll('#filters button').forEach(x=>x.setAttribute('aria-pressed',x===b));render(b.dataset.f);});
-grid.addEventListener('click',e=>{const d=e.target.closest('[data-dl]');if(!d)return;e.preventDefault();
-  d.classList.remove('todo');const s=d.closest('.card').querySelector('.state');if(s)s.remove();
-  const t=document.getElementById('toast');document.getElementById('toastText').textContent='Downloading to your drive';t.hidden=false;clearTimeout(window._t);window._t=setTimeout(()=>t.hidden=true,2200);});
+const st=new URLSearchParams(location.search).get('state');
+if(st==='empty'){isEmptyState=true;items.forEach(i=>i.deleted=true);$('.bar-row').hidden=true;$('.head .record').style.display='none';$('#empty').hidden=false;}
+if(st==='uploading'){startUpload('Customer call highlights.mp4');}
+if(st==='sharing'){const m=items.find(x=>x.id===8);m.s='sharing';m.when='Recorded just now';}
+if(st==='gif'){$('#gifDlg').hidden=false;}
+// Some browsers refuse the first copy. The dialog then asks for one more click on "Copy the GIF".
+if(st==='gifcopy'){$('#gifDlg').hidden=false;$('#gifTitle').textContent='The GIF is ready';$('#gifNote').textContent='Your browser did not copy it by itself. Press Copy the GIF, then paste it into your email.';
+  $('#gifCopy').hidden=false;$('#gifOk').classList.remove('primary');
+  $('#gifCopy').onclick=()=>{$('#gifTitle').textContent='GIF copied';$('#gifNote').textContent='Paste it into your email. It shows the first 3 seconds on a loop, without sound, and opens the share page when clicked.';$('#gifCopy').hidden=true;$('#gifOk').classList.add('primary');$('#gifOk').focus();};}
+if(st==='full'){isFull=true;$('#fullNotice').hidden=false;$('#recordBtn').classList.remove('primary');$('#recordBtn').classList.add('outline');}
+render();setStorage();
 </script>
 </body>
 </html>

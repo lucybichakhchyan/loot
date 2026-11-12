@@ -2,6 +2,18 @@
 
 Each deployed version has a git tag, such as `v0.1.0`. The newest version is listed first.
 
+## v1.0.0, 12 Nov 2026: first full version
+
+- Shorts: Claude suggests the parts of a long video that work on their own. You can keep, trim and download each one as an upright 1080 by 1920 video with captions.
+- Share links: a link lasts 1, 7 or 30 days, or until you turn it off, and the viewer's page shows your brand. You can also copy a GIF of the first 3 seconds into an email.
+- Share now: the recorder gives you a link straight after recording, and the video is prepared and exported in the background.
+- Brand settings: you set your name, logo, colors, fonts, caption style, closing line and share page button once. Exports, the editor and the share page all use them.
+- Editor: there is one Add menu, blur for the screen recording, text and image overlays, crop, and layout changes with a cut or a smooth fade. Claude writes YouTube chapters, the timeline has a zoom slider, and a zoom points at the spot you click on the video.
+- Recorder and home: the floating controller has a Script button, the Camera menu has Mirror my camera, and a notice appears when the microphone is quiet. Home shows upload progress, a Sign out button and how many days each video has left on the server.
+- Copy buttons work in Chrome, Safari and the Claude app's browser pane.
+- Anyone can fork LOOT and run their own copy. Nothing personal is built into the code, the web address and time zone come from `.env`, the deploy script reads its server and folder from settings, and the README explains the setup.
+- The approved design mockups are included in `design/`.
+
 ## v0.2.0, 12 Nov 2026
 
 - Sound: noise removal is gentler, volume is levelled to YouTube's level, and clean-up falls back to the original when it would remove the voice. The microphone meter now says "very quiet" when the sound is too low.

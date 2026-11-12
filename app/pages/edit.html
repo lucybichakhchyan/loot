@@ -201,7 +201,9 @@
   }
   .pv .shot{background:transparent;border-radius:6px;container-type:size;align-items:center;justify-content:center}
   .zw{display:block;overflow:hidden;border-radius:4px;aspect-ratio:var(--ar,16/9);width:min(100cqw,calc(100cqh * var(--ar,16/9)));flex:none}
-  .zw video{display:block;width:100%;height:100%;transition:transform .4s var(--ease)}
+  .zw{position:relative}
+  .zin{position:absolute;left:0;top:0;width:100%;height:100%;display:block;transition:transform .4s var(--ease)}
+  .zin video{display:block;width:100%;height:100%}
   .cam video{width:100%;height:100%;object-fit:cover}
   #preview.mirror .cam video{transform:scaleX(-1)}
   #preview{container-type:size}
@@ -221,6 +223,60 @@
   .tile.dim,.dim{opacity:.4;pointer-events:none}
   .blk.clip.removed b{text-decoration:line-through}
   .tbar .btn[disabled]{opacity:.4;cursor:not-allowed}
+  #preview .cap.boxed em{color:var(--hi,#AB8CF0)}
+  #preview.sans .cap em{font-family:var(--font-body);font-style:normal;color:var(--hi,#AB8CF0)}
+  #preview.sans .mark,#preview.sans .vcard b{font-family:var(--font-body);font-style:normal;font-weight:700}
+  #preview .vcard i{background:var(--hi,#AB8CF0)}
+  .tgrid{overflow-x:auto}
+  /* Things added on top of the video: blur boxes, text and images */
+  .olayer{position:absolute;inset:0;z-index:4;pointer-events:none}
+  .olayer > *{pointer-events:auto}
+  .bbox{position:absolute;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);background:rgba(128,128,128,.2);border-radius:3px;cursor:move;touch-action:none;z-index:2}
+  .bbox.draft{z-index:9;pointer-events:none}
+  .otext{position:absolute;transform:translate(-50%,-50%);color:#fff;font-weight:700;white-space:nowrap;cursor:move;padding:.1em .35em;border-radius:3px;outline:none;text-shadow:0 2px 10px rgba(0,0,0,.55);touch-action:none}
+  .otext.s{font-size:clamp(10px,3.4cqh,22px)} .otext.m{font-size:clamp(12px,5.2cqh,34px)} .otext.l{font-size:clamp(14px,7.6cqh,52px)}
+  .otext.boxed{background:#1A1A1A;text-shadow:none}
+  .otext.headline{font-family:var(--font-display);font-style:italic;font-weight:600}
+  #preview.sans .otext.headline{font-family:var(--font-body);font-style:normal;font-weight:700}
+  .oimg{position:absolute;transform:translate(-50%,-50%);cursor:move;border-radius:4px;touch-action:none;user-select:none}
+  .oimg.s{width:12%} .oimg.m{width:22%} .oimg.l{width:36%}
+  .olayer .sel,.bbox.sel{outline:2px dashed var(--fg);outline-offset:3px}
+  .frame.drawing{cursor:crosshair}
+  .frame.drawing .olayer > *,.frame.drawing .bbox{pointer-events:none}
+  .modehint{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:9;display:none;align-items:center;gap:8px;background:rgba(20,17,24,.94);color:#fff;font-size:var(--fs-sm);padding:5px 6px 5px 12px;border-radius:8px;white-space:nowrap;max-width:calc(100% - 16px)}
+  .modehint span{overflow:hidden;text-overflow:ellipsis}
+  .frame.vertical .modehint{white-space:normal;flex-wrap:wrap;justify-content:center;width:calc(100% - 16px);text-align:center;padding:6px}
+  .drawing .modehint.draw,.cropping .modehint.crop{display:flex}
+  .croparea{position:absolute;inset:4% 3%;z-index:8;display:none}
+  .cropping .croparea{display:block}
+  .cropbox{position:absolute;box-shadow:0 0 0 9999px rgba(10,8,14,.66);outline:2px solid var(--fg)}
+  .cropbox i{position:absolute;width:20px;height:20px;background:var(--fg);border-radius:4px;touch-action:none}
+  .cropbox i[data-c="tl"]{left:-10px;top:-10px;cursor:nwse-resize} .cropbox i[data-c="tr"]{right:-10px;top:-10px;cursor:nesw-resize}
+  .cropbox i[data-c="bl"]{left:-10px;bottom:-10px;cursor:nesw-resize} .cropbox i[data-c="br"]{right:-10px;bottom:-10px;cursor:nwse-resize}
+  .cropping .cap,.cropping .mark,.cropping .olayer,.cropping .vcard,.cropping .bbox{display:none}
+  /* Smooth layout change is a 0.2 second cross-fade, the same in the preview and in the export */
+  .pv #preview > .shot,.pv #preview > .cam{transition:opacity .1s linear}
+  .pv #preview.fadeout > .shot,.pv #preview.fadeout > .cam{opacity:0}
+  .pv #preview.cut > .shot,.pv #preview.cut > .cam,.pv #preview.cropping > .shot,.pv #preview.cropping > .cam{transition:none}
+  .big small.warn{color:var(--warn)}
+  .blk.blurb{background:rgba(246,246,244,.1);box-shadow:inset 0 0 0 1px var(--fg-faint);color:var(--fg-muted);padding:0 8px;line-height:32px;min-width:14px;text-overflow:ellipsis}
+  .blk.overb{background:rgba(171,140,240,.16);box-shadow:inset 0 0 0 1px var(--purple-soft);color:var(--purple-text);padding:0 8px;line-height:32px;min-width:14px;text-overflow:ellipsis}
+  .blk.tiny{font-size:0;padding:0}
+  #addMenu{top:auto;bottom:calc(100% + 4px);left:0;right:auto;min-width:190px}
+  #addMenu button[disabled]{opacity:.4;cursor:not-allowed}
+  /* Chapters */
+  .chapters{display:flex;flex-direction:column;gap:4px}
+  .ch{display:grid;grid-template-columns:56px minmax(0,1fr) 32px;gap:4px;align-items:center}
+  .chtime{height:32px;border:0;border-radius:6px;background:var(--surface-2);color:var(--purple-soft);font-variant-numeric:tabular-nums;font-size:var(--fs-sm);cursor:pointer}
+  .chtime:hover{background:var(--surface-3)}
+  .details .warn{color:var(--warn)}
+  .details{max-height:calc(100vh - 70px);overflow-y:auto}
+  /* GIF for email */
+  .gif{display:flex;gap:var(--space-3);align-items:center;background:var(--surface-2);border-radius:8px;padding:var(--space-2);text-align:left}
+  .gif img{width:140px;flex:none;border-radius:6px;display:block;background:#141118}
+  .big .gif .btn{height:30px;font-size:var(--fs-xs)}
+  .gif p{margin:0 0 6px;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-muted)}
+  .tlabels{position:sticky;left:0;z-index:6;background:var(--bg)}
 </style>
 </head>
 <body>
@@ -229,10 +285,11 @@
   <a class="back" href="/" aria-label="Back to your videos"><svg class="ic"><use href="/static/assets/icons.svg#arrow-left"/></svg><span class="hide-s">Your videos</span></a>
   <span class="sep"></span>
   <span class="doc-title" id="docTitle" contenteditable="true" spellcheck="false" role="textbox" aria-label="Video title"></span>
-  <button class="iconbtn" id="detailsBtn" aria-haspopup="dialog" aria-expanded="false" title="Title and description" aria-label="Title and description"><svg class="ic"><use href="/static/assets/icons.svg#chevron-down"/></svg></button>
+  <button class="iconbtn" id="detailsBtn" aria-haspopup="dialog" aria-expanded="false" title="Title, description and chapters" aria-label="Title, description and chapters"><svg class="ic"><use href="/static/assets/icons.svg#chevron-down"/></svg></button>
   <div class="right">
     <button class="iconbtn" id="undo" title="Undo (Cmd+Z)" aria-label="Undo" disabled><svg class="ic"><use href="/static/assets/icons.svg#undo-2"/></svg></button>
     <button class="iconbtn" id="redo" title="Redo (Shift+Cmd+Z)" aria-label="Redo" disabled><svg class="ic"><use href="/static/assets/icons.svg#redo-2"/></svg></button>
+    <a class="btn outline" id="shortsLink" href="/"><svg class="ic"><use href="/static/assets/icons.svg#smartphone"/></svg><span class="hide-s">Make shorts</span></a>
     <button class="exchip" id="exChip" aria-label="Export in progress. Open details."><span class="spin" style="width:14px;height:14px;border-width:2px"></span><span id="exChipText">Preparing 0%</span><span class="meter-bar"><i id="exChipBar" style="width:0"></i></span></button>
     <button class="btn primary" id="exportBtn"><svg class="ic"><use href="/static/assets/icons.svg#download"/></svg>Export</button>
   </div>
@@ -242,13 +299,17 @@
   <section class="viewer" aria-label="Video">
     <div class="pv">
       <div class="frame bg-brand" id="preview" data-layout="bubble">
-        <div class="shot"><span class="zw" id="zw"><video id="screenV" muted playsinline preload="auto"></video></span></div>
+        <div class="shot"><span class="zw" id="zw"><span class="zin" id="zin"><video id="screenV" muted playsinline preload="auto"></video></span></span></div>
         <div class="cam"><video id="camV" muted playsinline preload="auto"></video></div>
-        <div class="mark" id="nameMark">Lucy Bichakhchyan</div>
+        <div class="mark" id="nameMark"></div>
         <div class="cap" id="cap" style="display:none"></div>
         <audio id="master" preload="auto"></audio>
-        <div class="vcard" id="tcard" hidden><small id="tcardDate"></small><b id="tcardTitle"></b><i></i><span>Lucy Bichakhchyan</span></div>
-        <div class="vcard end" id="ecard" hidden><img src="/static/assets/avatar-256.png" alt=""><b id="ecardLine">More at bichakhchyan.com</b><i></i><span>Lucy Bichakhchyan</span></div>
+        <div class="vcard" id="tcard" hidden><small id="tcardDate"></small><b id="tcardTitle"></b><i></i><span></span></div>
+        <div class="vcard end" id="ecard" hidden><img src="/static/assets/avatar-256.png" alt=""><b id="ecardLine">Thanks for watching.</b><i></i><span></span></div>
+        <div class="olayer" id="olayer"></div>
+        <div class="croparea" id="cropArea"><div class="cropbox" id="cropBox" style="inset:0"><i data-c="tl"></i><i data-c="tr"></i><i data-c="bl"></i><i data-c="br"></i></div></div>
+        <div class="modehint draw"><span>Drag across what you want to hide</span><button class="btn sm" id="drawCancel">Cancel</button></div>
+        <div class="modehint crop"><span>Drag the corners to crop</span><button class="btn sm quiet" id="cropReset">Reset</button><button class="btn sm primary" id="cropDone">Done</button></div>
         <div class="pickhint">Click the video where the zoom should point</div>
         <div class="target" id="target" style="left:60%;top:40%"></div>
       </div>
@@ -306,13 +367,19 @@
     <div class="pbody" id="tab-style" role="tabpanel" aria-labelledby="tabS" hidden>
       <div class="sec">
         <div class="sech"><h3>Camera and screen</h3></div>
-        <p class="sub">For the whole video. To switch for one part, select those words in the transcript, or use Change layout above the timeline.</p>
+        <p class="sub">For the whole video. To switch for one part, select those words in the transcript, or use Add above the timeline.</p>
         <div class="tiles" id="layouts">
           <button class="tile" aria-pressed="true" data-l="bubble"><div class="frame bg-brand" data-layout="bubble"><div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div><div class="cam"><img src="/static/assets/avatar-256.png" alt=""></div></div>Bubble</button>
           <button class="tile" aria-pressed="false" data-l="side"><div class="frame bg-brand" data-layout="side"><div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div><div class="cam"><img src="/static/assets/avatar-256.png" alt=""></div></div>Side by side</button>
           <button class="tile" aria-pressed="false" data-l="cam"><div class="frame bg-brand" data-layout="cam"><div class="shot"></div><div class="cam"><img src="/static/assets/avatar-256.png" alt=""></div></div>Camera only</button>
           <button class="tile" aria-pressed="false" data-l="screen"><div class="frame bg-brand" data-layout="screen"><div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div><div class="cam"></div></div>Screen only</button>
         </div>
+      </div>
+
+      <div class="sec">
+        <div class="line"><span>When the layout changes<br><small class="xs muted">Smooth fades to the new layout in 0.2 seconds</small></span><div class="seg" id="trans" style="width:160px"><button aria-pressed="false" data-v="cut">Cut</button><button aria-pressed="true" data-v="smooth">Smooth</button></div></div>
+        <div class="line"><span>Mirror my camera</span><button class="switch" role="switch" aria-checked="true" id="mirrorSwitch" aria-label="Mirror my camera"></button></div>
+        <div class="line"><span id="cropState">The screen recording is not cropped</span><button class="btn sm" id="cropBtn"><svg class="ic"><use href="/static/assets/icons.svg#crop"/></svg><span>Crop</span></button></div>
       </div>
 
       <div class="sec">
@@ -337,7 +404,7 @@
 
       <div class="sec">
         <div class="sech"><h3>Clean up the sound</h3><button class="switch" role="switch" aria-checked="true" id="soundSwitch" aria-label="Clean up the sound"></button></div>
-        <p class="sub">Turns down background noise. The volume is evened out either way, and your original recording is kept.</p>
+        <p class="sub">Removes background noise and evens out the volume. Your original recording is kept.</p>
         <div id="soundBox">
           <div class="compare"><div class="seg" id="ba"><button aria-pressed="false" data-v="before">Original</button><button aria-pressed="true" data-v="after">Cleaned</button></div><button class="btn" id="sample"><svg class="ic fill"><use href="/static/assets/icons.svg#play"/></svg><span id="sampleText">Listen</span></button></div>
           <p class="sub" id="loudness" style="margin:var(--space-3) 0 0"></p>
@@ -350,8 +417,7 @@
         <div class="line"><span>Closing card at the end</span><button class="switch" role="switch" aria-checked="false" id="outroSwitch" aria-label="Closing card at the end"></button></div>
         <div class="field" id="outroField" hidden><label class="label" for="outroText">Closing line</label><input class="input" id="outroText" maxlength="60"></div>
         <div class="line"><span>Show my name in the corner</span><button class="switch" role="switch" aria-checked="true" id="nameSwitch" aria-label="Show my name"></button></div>
-        <div class="line"><span>Mirror my camera<br><span class="muted xs">Shows you the way a mirror does. Turn off if text behind you reads backwards.</span></span><button class="switch" role="switch" aria-checked="true" id="mirrorSwitch" aria-label="Mirror my camera"></button></div>
-        <p class="sub" style="margin:var(--space-3) 0 0">Changes here only affect this video.</p>
+        <p class="sub" style="margin:var(--space-3) 0 0">These start from your <a href="/brand">Brand settings</a>. Changes here only affect this video.</p>
       </div>
     </div>
   </aside>
@@ -362,16 +428,29 @@
     <button class="btn" id="splitBtn" title="Split the clip at the playhead (S)"><svg class="ic"><use href="/static/assets/icons.svg#split"/></svg><span>Split</span></button>
     <button class="btn" id="delBtn" title="Delete the selected clip or zoom (Delete)" disabled><svg class="ic"><use href="/static/assets/icons.svg#trash-2"/></svg><span>Delete</span></button>
     <span class="vsep"></span>
-    <button class="btn" id="addZoom" title="Add a zoom at the playhead"><svg class="ic"><use href="/static/assets/icons.svg#zoom-in"/></svg><span>Add zoom</span></button>
-    <button class="btn" id="addLayout" title="Use a different layout from the playhead on"><svg class="ic"><use href="/static/assets/icons.svg#picture-in-picture-2"/></svg><span>Change layout</span></button>
-    <a class="btn" id="recordMore" href="/record" title="Record another clip for this video"><svg class="ic"><use href="/static/assets/icons.svg#plus"/></svg><span>Record more</span></a>
-    <div class="legend"><span><i style="background:rgba(230,106,99,.5);box-shadow:inset 0 0 0 1px var(--record)"></i>Cut</span><span><i style="background:rgba(171,140,240,.25);box-shadow:inset 0 0 0 1px var(--purple-soft)"></i>Possible mistake</span></div>
+    <div class="menuwrap">
+      <button class="btn" id="addBtn" aria-haspopup="menu" aria-expanded="false" title="Add something to the video at the playhead"><svg class="ic"><use href="/static/assets/icons.svg#plus"/></svg><span>Add</span><svg class="ic"><use href="/static/assets/icons.svg#chevron-down"/></svg></button>
+      <div class="menu" id="addMenu" role="menu" hidden>
+        <div class="mh">Add at the playhead</div>
+        <button role="menuitem" id="addZoom"><svg class="ic lead"><use href="/static/assets/icons.svg#zoom-in"/></svg>Zoom</button>
+        <button role="menuitem" id="addLayout"><svg class="ic lead"><use href="/static/assets/icons.svg#picture-in-picture-2"/></svg>Layout change</button>
+        <button role="menuitem" id="addBlur"><svg class="ic lead"><use href="/static/assets/icons.svg#eye-off"/></svg>Blur</button>
+        <button role="menuitem" id="addText"><svg class="ic lead"><use href="/static/assets/icons.svg#type"/></svg>Text</button>
+        <button role="menuitem" id="addImage"><svg class="ic lead"><use href="/static/assets/icons.svg#image"/></svg>Image</button>
+      </div>
     </div>
+    <a class="btn" id="recordMore" href="/record" title="Record another clip for this video"><svg class="ic"><use href="/static/assets/icons.svg#video"/></svg><span>Record more</span></a>
+    <input type="file" id="imgFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    <div class="legend"><span><i style="background:rgba(230,106,99,.5);box-shadow:inset 0 0 0 1px var(--record)"></i>Cut</span><span><i style="background:rgba(171,140,240,.25);box-shadow:inset 0 0 0 1px var(--purple-soft)"></i>Possible mistake</span></div>
+    <div class="zoomctl"><svg class="ic"><use href="/static/assets/icons.svg#search"/></svg><input type="range" id="tzoom" min="0" max="100" value="0" aria-label="Timeline zoom"></div>
+  </div>
   <div class="tgrid">
     <div class="tlabels">
       <div class="h-video" style="margin-bottom:4px">Video</div>
       <div class="h-thin" style="margin-bottom:4px">Layout</div>
       <div class="h-thin" style="margin-bottom:4px">Zoom</div>
+      <div class="h-thin" style="margin-bottom:4px" data-for="blur" hidden>Blur</div>
+      <div class="h-thin" style="margin-bottom:4px" data-for="over" hidden>Overlays</div>
       <div class="h-thin caps">Captions</div>
     </div>
     <div class="tracks" id="tracks" tabindex="0" role="slider" aria-label="Playhead position. Arrow keys move one second, Shift and arrow keys move ten." aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
@@ -382,13 +461,14 @@
         </div>
       <div class="track h-thin" id="zoomTrack">
         </div>
+      <div class="track h-thin" id="blurTrack" hidden></div>
+      <div class="track h-thin" id="overTrack" hidden></div>
       <div class="track h-thin caps"><div class="capchips" id="capchips"></div></div>
       <div class="zpop" id="zpop" role="dialog" aria-label="Zoom settings" hidden>
         <div class="line"><b>Zoom</b><span id="zVal">1.6×</span></div>
         <div class="field"><label class="label" for="zRange">How far</label><input type="range" min="1.1" max="3" step="0.1" value="1.6" id="zRange"></div>
         <div class="field"><label class="label" for="zLen">How long <span id="zLenVal" style="float:right">4 seconds</span></label><input type="range" min="1" max="12" step="1" value="4" id="zLen"></div>
-        <button class="btn" id="zPickBtn"><svg class="ic"><use href="/static/assets/icons.svg#search"/></svg>Choose where it points</button>
-        <p class="xs muted" id="zPick" style="margin:0" hidden>Click the video to choose the spot.</p>
+        <p class="xs muted" id="zPick" style="margin:0">Click the video to choose where the zoom points.</p>
         <div style="display:flex;justify-content:space-between;gap:8px"><button class="btn sm danger" id="zDel">Remove zoom</button><button class="btn sm" id="zDone">Done</button></div>
       </div>
       <div class="zpop" id="lpop" role="dialog" aria-label="Layout for this part" hidden>
@@ -396,6 +476,22 @@
         <div class="lgrid" id="lChoices"><button data-l="bubble" aria-pressed="false">Bubble</button><button data-l="side" aria-pressed="false">Side by side</button><button data-l="cam" aria-pressed="true">Camera only</button><button data-l="screen" aria-pressed="false">Screen only</button></div>
         <div class="field"><label class="label" for="lLen">How long <span id="lLenVal" style="float:right">10 seconds</span></label><input type="range" min="2" max="120" step="1" value="10" id="lLen"></div>
         <div style="display:flex;justify-content:space-between;gap:8px"><button class="btn sm danger" id="lDel">Remove</button><button class="btn sm" id="lDone">Done</button></div>
+      </div>
+      <div class="zpop" id="bpop" role="dialog" aria-label="Blur settings" hidden>
+        <div class="line"><b>Blur</b></div>
+        <p class="xs muted" style="margin:0">The blur covers your screen recording, not the camera, and stays in one place on it. If the detail moves, add another blur.</p>
+        <div class="field"><label class="label" for="bLen">How long <span id="bLenVal" style="float:right">10 seconds</span></label><input type="range" min="2" max="300" step="1" value="10" id="bLen"></div>
+        <button class="btn sm" id="bRedo" style="align-self:flex-start">Mark the area again</button>
+        <div style="display:flex;justify-content:space-between;gap:8px"><button class="btn sm danger" id="bDel">Remove</button><button class="btn sm" id="bDone">Done</button></div>
+      </div>
+      <div class="zpop" id="opop" role="dialog" aria-label="Text or image settings" hidden>
+        <div class="line"><b id="oTitle">Text on the video</b></div>
+        <p class="xs muted" style="margin:0" id="oHelp">Type on the video to change the words. Drag to move it.</p>
+        <div class="field"><span class="label">Size</span><div class="seg" id="oSize"><button aria-pressed="false" data-v="s">Small</button><button aria-pressed="true" data-v="m">Medium</button><button aria-pressed="false" data-v="l">Large</button></div></div>
+        <div class="field" id="oLookRow"><span class="label">Look</span><div class="seg" id="oLook"><button aria-pressed="true" data-v="plain">Plain</button><button aria-pressed="false" data-v="boxed">Boxed</button><button aria-pressed="false" data-v="headline">Headline</button></div></div>
+        <div class="field"><label class="label" for="oLen">How long <span id="oLenVal" style="float:right">6 seconds</span></label><input type="range" min="2" max="120" step="1" value="6" id="oLen"></div>
+        <button class="btn sm" id="oReplace" style="align-self:flex-start" hidden>Replace the image</button>
+        <div style="display:flex;justify-content:space-between;gap:8px"><button class="btn sm danger" id="oDel">Remove</button><button class="btn sm" id="oDone">Done</button></div>
       </div>
       <div class="playhead" id="playhead" style="left:0"></div>
     </div>
@@ -409,10 +505,15 @@
 </div>
 
 <div class="details" id="details" role="dialog" aria-labelledby="detTitle" hidden>
-  <div class="dh"><h2 id="detTitle">Title and description</h2><button class="iconbtn" id="detClose" aria-label="Close"><svg class="ic"><use href="/static/assets/icons.svg#x"/></svg></button></div>
-  <p class="from" id="detFrom">LOOT wrote these from your transcript. Edit them, or ask for another version.</p>
+  <div class="dh"><h2 id="detTitle">Title, description and chapters</h2><button class="iconbtn" id="detClose" aria-label="Close"><svg class="ic"><use href="/static/assets/icons.svg#x"/></svg></button></div>
+  <p class="from" id="detFrom">LOOT wrote these from your transcript. Edit anything, or ask for another version.</p>
   <div class="field"><label class="label" for="detT">Title <span class="count" id="detTn"></span></label><input class="input" id="detT"></div>
   <div class="field"><label class="label" for="detD">Description <span class="count" id="detDn"></span></label><textarea class="input" id="detD" rows="4"></textarea></div>
+  <div class="field"><span class="label">Chapters for YouTube <span class="count warn" id="chNote"></span></span>
+    <div class="chapters" id="chapters"></div>
+    <div class="row" style="margin-top:6px"><button class="btn sm" id="chAdd"><svg class="ic"><use href="/static/assets/icons.svg#plus"/></svg>Add at the playhead</button><button class="btn sm outline" id="chCopy">Copy chapters</button></div>
+  </div>
+  <div class="line"><span>Add the chapters when I copy the description</span><button class="switch" role="switch" aria-checked="true" id="chInDesc" aria-label="Add the chapters when I copy the description"></button></div>
   <div class="row"><button class="btn" id="detAgain"><svg class="ic"><use href="/static/assets/icons.svg#rotate-ccw"/></svg>Write again</button><button class="btn outline" id="detCopyT">Copy title</button><button class="btn outline" id="detCopyD">Copy description</button></div>
 </div>
 
@@ -430,7 +531,19 @@
         <button class="btn primary" id="dl"><svg class="ic"><use href="/static/assets/icons.svg#download"/></svg><span id="dlText">Download video</span></button>
         <small id="dlNote"></small>
       </div>
+      <div class="or" style="margin:var(--space-4) 0">or</div>
+      <div class="big">
+        <div class="line"><label for="linkLife">A share link works for</label><select class="select" id="linkLife" style="width:180px"><option value="1">1 day</option><option value="7" selected>7 days</option><option value="30">30 days</option><option value="0">Until I turn it off</option></select></div>
+        <div class="two"><button class="btn outline" id="copyLink"><svg class="ic"><use href="/static/assets/icons.svg#link"/></svg><span id="linkText">Copy link</span></button><button class="btn outline" id="copyGif"><svg class="ic"><use href="/static/assets/icons.svg#mail"/></svg><span id="gifText">Copy GIF for email</span></button></div>
+        <div class="gif" id="gifBox" hidden>
+          <img id="gifImg" alt="The first 3 seconds of the video, with a play button on top">
+          <div><p>The first 3 seconds on a loop, without sound, with a play button on top. In an email it opens the share page when clicked.</p><button class="btn sm" id="gifDl">Download the GIF</button></div>
+        </div>
+        <div class="linkrow" id="linkRow" hidden><input class="input" id="linkField" readonly value="" aria-label="Share link"><button class="btn" id="linkAgain">Copy</button></div>
+        <small class="warn" id="linkRefused" hidden>Your browser did not allow the copy. The link is selected, so press Cmd+C.</small>
+        <small id="linkNote"><span id="linkWords">Anyone with the link can watch.</span> <a id="linkPage" href="/w/preview" target="_blank">See the page they get</a></small>
       </div>
+    </div>
 
     <div class="view" id="vProgress" hidden>
       <div class="big">
@@ -447,7 +560,7 @@
         <p style="margin:0;text-align:center;font-weight:600;font-size:var(--fs-lg)">Your video is on your drive</p>
         <p class="xs" id="doneNote" style="margin:0;text-align:center;color:var(--fg-muted)"></p>
         <div class="two"><button class="btn outline" id="doneCopyT" style="height:40px">Copy title</button><button class="btn outline" id="doneCopyD" style="height:40px">Copy description</button></div>
-        <button class="btn outline" id="dlAgain" style="height:40px"><svg class="ic"><use href="/static/assets/icons.svg#download"/></svg>Download again</button>
+        <div class="two"><a class="btn outline" id="shortsLink2" href="/" style="height:40px"><svg class="ic"><use href="/static/assets/icons.svg#smartphone"/></svg>Make shorts</a><button class="btn outline" id="dlAgain" style="height:40px"><svg class="ic"><use href="/static/assets/icons.svg#download"/></svg>Download again</button></div>
         <button class="btn primary lg" id="doneBtn">Done</button>
       </div>
     </div>

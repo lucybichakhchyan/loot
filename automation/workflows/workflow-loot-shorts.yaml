@@ -1,0 +1,29 @@
+id: 69056b48-372c-486e-8039-d2d04e456d4d
+name: loot-shorts
+description: Suggest parts of a video that work on their own as shorts; Claude picks them and code checks them
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+  required: ["project"]
+jobs:
+  - name: suggest
+    description: One Claude call on the transcript text; reused when the transcript is unchanged
+    steps:
+      - name: pick
+        description: Claude picks up to five parts with a title and a first line; code snaps them to whole sentences, keeps them under 60 seconds and drops overlaps
+        task:
+          type: behavior
+          behavior: loot-shorts
+          methodName: execute
+          inputs:
+            project: ${{ inputs.project }}
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn: []
+    weight: 0
+version: 1

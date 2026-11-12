@@ -10,78 +10,139 @@
   .wrap{max-width:1160px;margin:0 auto;padding:var(--space-6) var(--space-5) var(--space-9)}
   .head{margin-bottom:var(--space-5)}
   .head h1{font-size:24px;line-height:32px}
-  .head p{margin:6px 0 0;color:var(--fg-muted);font-size:var(--fs-md);max-width:640px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:var(--space-4)}
-  .short{background:var(--surface);border-radius:10px;padding:var(--space-3);display:flex;flex-direction:column;gap:var(--space-3);box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow var(--dur-fast) var(--ease),opacity var(--dur-fast) var(--ease)}
+  .head p{margin:6px 0 0;color:var(--fg-muted);font-size:var(--fs-md);max-width:680px}
+  .from{display:inline-flex;align-items:center;gap:6px;margin-top:var(--space-2);font-size:var(--fs-sm);min-height:32px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-4)}
+  .short{background:var(--surface);border-radius:10px;padding:var(--space-3);display:flex;flex-direction:column;gap:var(--space-3);box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow var(--dur-fast) var(--ease)}
   .short.kept{box-shadow:inset 0 0 0 2px var(--purple-soft)}
-  .short.skipped{opacity:.5}
   .phone{position:relative;aspect-ratio:9/16;border-radius:8px;overflow:hidden;background:radial-gradient(120% 80% at 50% 0%,#3a2a55,#141118);cursor:pointer;border:0;padding:0;width:100%;display:block}
   .phone .shot{inset:24% 7% 40% 7%;border-radius:3px}
   .phone .cam{width:50%;right:25%;bottom:13%;box-shadow:0 0 0 2px #fff}
-  .phone .hook{position:absolute;left:7%;right:24%;top:6%;font-weight:800;font-size:17px;line-height:1.12;color:#fff;text-align:left;text-shadow:0 2px 8px rgba(0,0,0,.6);z-index:2}
+  .phone .hook{position:absolute;left:7%;right:20%;top:6%;font-weight:800;font-size:17px;line-height:1.12;color:#fff;text-align:left;text-shadow:0 2px 8px rgba(0,0,0,.6);z-index:2}
   .phone .sub{position:absolute;left:50%;transform:translateX(-50%);bottom:5%;background:#1A1A1A;color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:2px;white-space:nowrap;z-index:2}
-  .phone .len{position:absolute;right:8px;top:8px;background:rgba(20,17,24,.85);font-size:var(--fs-xs);padding:2px 6px;border-radius:4px;z-index:3;font-variant-numeric:tabular-nums}
+  .phone .len{position:absolute;right:8px;top:8px;background:rgba(20,17,24,.9);font-size:var(--fs-xs);padding:2px 6px;border-radius:4px;z-index:3;font-variant-numeric:tabular-nums}
+  .phone .len.warn{color:var(--warn)}
   .phone .po{position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,17,24,.3);opacity:0;transition:opacity var(--dur-fast);z-index:4}
-  .phone:hover .po{opacity:1}
-  .phone .po span{width:48px;height:48px;border-radius:50%;background:rgba(246,246,244,.94);color:#1A1620;display:grid;place-items:center}
+  .phone:hover .po,.phone:focus-visible .po{opacity:1}
+  .phone .po span{width:48px;height:48px;border-radius:50%;background:rgba(246,246,244,.95);color:#1A1620;display:grid;place-items:center}
   .phone .po .ic{width:18px;height:18px;margin-left:2px}
-  .short .input{font-weight:500}
-  .why{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-muted);margin:0;min-height:32px}
-  .acts{display:flex;gap:var(--space-1)}
-  .acts .btn{flex:1;padding:0 6px;min-width:0}
+  .why{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-muted);margin:0}
+  .fld{display:flex;flex-direction:column;gap:4px}
+  .fld label{font-size:var(--fs-xs);color:var(--fg-muted)}
+  .fld .input{font-weight:500}
+  .trim{display:flex;flex-direction:column;gap:8px}
+  .strip{position:relative;height:36px;background:var(--surface-2);border-radius:6px}
+  .strip .range{position:absolute;top:4px;bottom:4px;background:var(--purple-surface);box-shadow:inset 0 0 0 1px var(--purple-soft);border-radius:4px}
+  .strip .range::before,.strip .range::after{content:"";position:absolute;top:-2px;bottom:-2px;width:12px;background:var(--purple-soft);border-radius:4px}
+  .strip .range::before{left:-6px}.strip .range::after{right:-6px}
+  .tt{display:flex;flex-direction:column;gap:6px}
+  .nudge{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2)}
+  .nudge span{font-size:var(--fs-xs);color:var(--fg-muted)}
+  .nudge .row{display:flex;align-items:center;gap:2px;background:var(--surface-2);border-radius:6px;width:116px}
+  .nudge .row button{width:32px;height:32px;border:0;background:transparent;color:var(--fg);font-size:18px;line-height:1;cursor:pointer;border-radius:6px}
+  .nudge .row button:hover{background:var(--surface-3)}
+  .nudge .row output{flex:1;text-align:center;font-variant-numeric:tabular-nums;font-size:var(--fs-sm)}
+  .lenmsg{font-size:var(--fs-xs);color:var(--fg-muted);margin:0}
+  .lenmsg.warn{color:var(--warn)}
+  .acts{display:flex;gap:var(--space-2)}
+  .acts .keep{flex:1;min-width:0;justify-content:center}
   .keep[aria-pressed="true"]{background:var(--purple-strong);color:#fff}
-  .trim{display:none;flex-direction:column;gap:6px}
-  .short.trimming .trim{display:flex}
-  .strip{position:relative;height:30px;background:var(--surface-2);border-radius:6px}
-  .strip i{position:absolute;top:3px;bottom:3px;left:22%;width:46%;border-radius:4px;background:var(--purple-surface);box-shadow:inset 0 0 0 1px var(--purple-soft);border-left:5px solid var(--purple-soft);border-right:5px solid var(--purple-soft);cursor:ew-resize}
-  .trim small{font-size:var(--fs-2xs);color:var(--fg-faint);display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}
-  @media (max-width:560px){.grid{grid-template-columns:1fr 1fr;gap:var(--space-3)}.wrap{padding:var(--space-4) var(--space-3) var(--space-8)}.phone .hook{font-size:13px}}
+  @media (max-width:560px){.grid{grid-template-columns:1fr 1fr;gap:var(--space-3)}.wrap{padding:var(--space-4) var(--space-3) var(--space-8)}.phone .hook{font-size:13px}.short{padding:var(--space-2)}}
 </style>
 </head>
 <body>
 <header class="topbar">
-  <a class="back" href="editor.html"><svg class="ic"><use href="assets/icons.svg#arrow-left"/></svg>Back to the video</a>
+  <a class="back" href="editor.html"><svg class="ic"><use href="assets/icons.svg#arrow-left"/></svg><span>Back to the video</span></a>
   <div class="right">
-    <button class="btn primary" id="dl"><svg class="ic"><use href="assets/icons.svg#download"/></svg><span id="dlText">Download 1 short</span></button>
+    <button class="btn primary" id="dl" disabled><svg class="ic"><use href="assets/icons.svg#download"/></svg><span id="dlText">Download shorts</span></button>
   </div>
 </header>
 
 <main class="wrap">
   <div class="head">
     <h1 class="page-title">Shorts from this video</h1>
-    <p>LOOT found 4 parts that work on their own as a short. Keep the ones you like, then download them.</p>
+    <p>LOOT found 4 parts of your video that work on their own. Press Keep on the ones you want, adjust the start and end if you like, then download them.</p>
+    <a class="from" href="editor.html"><svg class="ic"><use href="assets/icons.svg#video"/></svg>How I plan a paid media test on a small budget, 12:40</a>
   </div>
   <div class="grid" id="grid"></div>
+  <div class="empty" id="finding" hidden>
+    <span class="spin" style="width:28px;height:28px"></span>
+    <h2>Looking for parts that work as shorts</h2>
+    <p>LOOT is reading the transcript. This takes about a minute. You can go back to the video and keep editing, and come back here later.</p>
+    <a class="btn" href="editor.html">Back to the video</a>
+  </div>
+  <div class="empty" id="failed" hidden>
+    <h2>No shorts were suggested</h2>
+    <p>LOOT couldn't reach Claude to read the transcript just now. Your video is fine, and nothing was lost.</p>
+    <a class="btn primary" href="shorts.html?state=finding">Try again</a>
+    <a class="btn quiet" href="editor.html">Back to the video</a>
+  </div>
+  <div class="empty" id="nothing" hidden>
+    <h2>No part stood out as a short</h2>
+    <p>A short needs 30 to 60 seconds that make sense on their own. This video did not have one, which is common for videos under two minutes.</p>
+    <a class="btn" href="editor.html">Back to the video</a>
+  </div>
+  <div class="empty" id="none" hidden>
+    <h2>No shorts left</h2>
+    <p>You skipped every suggestion.</p>
+    <button class="btn" id="bring">Bring them back</button>
+  </div>
 </main>
 
-<div class="toast" id="toast" hidden><span id="toastText"></span></div>
+<div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button id="toastUndo">Undo</button></div>
 
 <script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const ic=n=>`<svg class="ic"><use href="assets/icons.svg#${n}"/></svg>`;
+const f=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+const SRC=760;
 const shorts=[
- {t:'Write one question first',hook:"Can't say it in one sentence?",sub:'the test is too big',len:'0:48',from:'0:14',to:'1:02',why:'Opens with a question and makes one clear point.',kept:true},
- {t:'The 80/20 budget split',hook:'I hold back twenty percent.',sub:"here's why",len:'0:55',from:'4:19',to:'5:14',why:'A simple rule people can copy right away.'},
- {t:'Cost per qualified lead',hook:"Clicks lie. This number doesn't.",sub:'cost per qualified lead',len:'0:41',from:'8:52',to:'9:33',why:'A strong opinion in the first three seconds.'},
- {t:'One channel, one audience',hook:'Test one thing at a time.',sub:'one channel, one audience',len:'0:34',from:'0:31',to:'1:05',why:'Short and complete, with no setup needed.'},
+ {t:'Write one question first',hook:"Can't say it in one sentence?",sub:'the test is too big',a:14,b:62,why:'Opens with a question and makes one clear point.',kept:true},
+ {t:'The 80/20 budget split',hook:'I hold back twenty percent.',sub:"here's why",a:259,b:314,why:'A simple rule people can copy right away.'},
+ {t:'Cost per qualified lead',hook:"Clicks lie. This number doesn't.",sub:'cost per qualified lead',a:532,b:573,why:'A strong opinion in the first three seconds.'},
+ {t:'One channel, one audience',hook:'Test one thing at a time.',sub:'one channel, one audience',a:31,b:65,why:'Short and complete, with no setup needed.'},
 ];
-const grid=document.getElementById('grid');
-function count(){const n=shorts.filter(s=>s.kept).length;document.getElementById('dlText').textContent=n?`Download ${n} ${n===1?'short':'shorts'}`:'Download shorts';document.getElementById('dl').disabled=!n;}
-function render(){grid.innerHTML='';shorts.forEach((s,i)=>{const d=document.createElement('article');d.className='short'+(s.kept?' kept':'')+(s.skipped?' skipped':'')+(s.trim?' trimming':'');
-  d.innerHTML=`<button class="phone" aria-label="Play ${s.t}"><span class="hook">${s.hook}</span><span class="len">${s.len}</span>
-    <div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div>
-    <div class="cam"><img src="assets/avatar-256.png" alt=""></div><span class="sub">${s.sub}</span><span class="po"><span>${ic('play').replace('class="ic"','class="ic fill"')}</span></span></button>
-   <input class="input" value="${s.t}" aria-label="Title">
-   <p class="why">${s.why}</p>
-   <div class="trim"><div class="strip"><i></i></div><small><span>Starts ${s.from}</span><span>Ends ${s.to}</span></small></div>
-   <div class="acts"><button class="btn keep" data-keep="${i}" aria-pressed="${!!s.kept}">${s.kept?ic('check')+'Keeping':'Keep'}</button><button class="btn quiet" data-trim="${i}">${s.trim?'Done':'Trim'}</button><button class="btn quiet" data-skip="${i}">${s.skipped?'Undo':'Skip'}</button></div>`;
-  grid.appendChild(d);});count();}
-grid.addEventListener('click',e=>{const k=e.target.closest('[data-keep]'),s=e.target.closest('[data-skip]'),t=e.target.closest('[data-trim]');
-  if(k){const x=shorts[+k.dataset.keep];x.kept=!x.kept;x.skipped=false;render();}
-  if(s){const x=shorts[+s.dataset.skip];x.skipped=!x.skipped;if(x.skipped)x.kept=false;render();}
-  if(t){const x=shorts[+t.dataset.trim];x.trim=!x.trim;render();}});
-grid.addEventListener('change',e=>{const inp=e.target.closest('.input');if(!inp)return;const i=[...grid.children].indexOf(inp.closest('.short'));shorts[i].t=inp.value;});
-document.getElementById('dl').onclick=()=>{const t=document.getElementById('toast');document.getElementById('toastText').textContent='Preparing your shorts. They will save to your Downloads folder.';t.hidden=false;setTimeout(()=>t.hidden=true,3000);};
+const grid=$('#grid');
+function toast(text,undo){const t=$('#toast');$('#toastText').textContent=text;$('#toastUndo').hidden=!undo;$('#toastUndo').onclick=()=>{undo();t.hidden=true;};t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,undo?7000:3500);}
+function lenInfo(s){const L=s.b-s.a;if(L>60)return {warn:true,msg:`${L} seconds. Most platforms cap shorts at 60 seconds.`};if(L<30)return {warn:true,msg:`${L} seconds. Shorts under 30 seconds can feel too brief.`};return {warn:false,msg:`${L} seconds. A good length.`};}
+function counts(){const n=shorts.filter(s=>!s.gone&&s.kept).length;$('#dlText').textContent=n?`Download ${n} ${n===1?'short':'shorts'}`:'Download shorts';$('#dl').disabled=!n;$('#none').hidden=shorts.some(s=>!s.gone);}
+function render(){
+  grid.innerHTML='';
+  shorts.forEach((s,i)=>{if(s.gone)return;const li=lenInfo(s);const d=document.createElement('article');d.className='short'+(s.kept?' kept':'');d.dataset.i=i;
+    d.innerHTML=`<button class="phone" data-play aria-label="Watch ${s.t}"><span class="hook">${s.hook}</span><span class="len ${li.warn?'warn':''}">${f(s.b-s.a)}</span>
+      <div class="shot"><div class="chrome"><i></i><i></i><i></i><b></b></div><div class="page"><div class="side"></div><div class="main"><div class="h"></div><div class="row"></div><div class="row"></div></div></div></div>
+      <div class="cam"><img src="assets/avatar-256.png" alt=""></div><span class="sub">${s.sub}</span><span class="po"><span>${ic('play').replace('class="ic"','class="ic fill"')}</span></span></button>
+     <div class="fld"><label for="t${i}">Title</label><input class="input" id="t${i}" data-f="t" value="${s.t}"></div>
+     <div class="fld"><label for="h${i}">First line on the video</label><input class="input" id="h${i}" data-f="hook" value="${s.hook}"></div>
+     <p class="why">${s.why}</p>
+     <div class="trim">
+       <div class="strip"><div class="range" style="left:${s.a/SRC*100}%;width:${(s.b-s.a)/SRC*100}%"></div></div>
+       <div class="tt">
+         <div class="nudge"><span>Starts at</span><div class="row"><button data-n="a-" aria-label="Start one second earlier">−</button><output>${f(s.a)}</output><button data-n="a+" aria-label="Start one second later">+</button></div></div>
+         <div class="nudge"><span>Ends at</span><div class="row"><button data-n="b-" aria-label="End one second earlier">−</button><output>${f(s.b)}</output><button data-n="b+" aria-label="End one second later">+</button></div></div>
+       </div>
+       <p class="lenmsg ${li.warn?'warn':''}">${li.msg}</p>
+     </div>
+     <div class="acts"><button class="btn keep" data-keep aria-pressed="${!!s.kept}">${s.kept?ic('check')+'Kept':'Keep'}</button><button class="btn quiet" data-skip>Skip</button></div>`;
+    grid.appendChild(d);});
+  counts();
+}
+grid.addEventListener('click',e=>{const c=e.target.closest('.short');if(!c)return;const s=shorts[+c.dataset.i];
+  if(e.target.closest('[data-keep]')){s.kept=!s.kept;render();}
+  if(e.target.closest('[data-skip]')){s.gone=true;const was=s.kept;s.kept=false;render();toast(`Skipped "${s.t}".`,()=>{s.gone=false;s.kept=was;render();});}
+  if(e.target.closest('[data-play]'))toast(`Playing "${s.t}" with its first line and captions.`,false);
+  const n=e.target.closest('[data-n]');if(n){const k=n.dataset.n,step=k.endsWith('+')?1:-1,key=k[0];const v=s[key]+step;if(key==='a'&&v>=s.b-5)return;if(key==='b'&&v<=s.a+5)return;if(v<0||v>SRC)return;s[key]=v;render();
+    const focus=grid.querySelector(`.short[data-i="${c.dataset.i}"] [data-n="${k}"]`);if(focus)focus.focus();}
+});
+grid.addEventListener('change',e=>{const inp=e.target.closest('input[data-f]');if(!inp)return;const s=shorts[+inp.closest('.short').dataset.i];s[inp.dataset.f]=inp.value;
+  if(inp.dataset.f==='hook'){inp.closest('.short').querySelector('.phone .hook').textContent=inp.value;}});
+$('#bring').onclick=()=>{shorts.forEach(s=>s.gone=false);render();};
+$('#dl').onclick=()=>toast('Preparing your shorts. They save to your Downloads folder, and LOOT removes its copies.',false);
 render();
+// Other moments, opened with ?state=finding or ?state=nothing (see states.html)
+const st=new URLSearchParams(location.search).get('state');
+if(st==='finding'||st==='nothing'||st==='failed'){grid.hidden=true;grid.style.display='none';$('#none').hidden=true;$('#'+st).hidden=false;$('#dl').disabled=true;$('#dlText').textContent='Download shorts';
+  $('.head p').textContent=st==='finding'?'LOOT is looking through your video for parts that work on their own.':'LOOT looked through your video for parts that work on their own.';}
 </script>
 </body>
 </html>

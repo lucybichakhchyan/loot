@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shorts · LOOT</title>
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/app.css">
+<style>
+  .wrap{max-width:1160px;margin:0 auto;padding:var(--space-6) var(--space-5) var(--space-9)}
+  .head{margin-bottom:var(--space-5)}
+  .head h1{font-size:24px;line-height:32px}
+  .head p{margin:6px 0 0;color:var(--fg-muted);font-size:var(--fs-md);max-width:680px}
+  .from{display:inline-flex;align-items:center;gap:6px;margin-top:var(--space-2);font-size:var(--fs-sm);min-height:32px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-4)}
+  .short{background:var(--surface);border-radius:10px;padding:var(--space-3);display:flex;flex-direction:column;gap:var(--space-3);box-shadow:inset 0 0 0 1px var(--line);transition:box-shadow var(--dur-fast) var(--ease)}
+  .short.kept{box-shadow:inset 0 0 0 2px var(--purple-soft)}
+  .phone{position:relative;aspect-ratio:9/16;border-radius:8px;overflow:hidden;background:radial-gradient(120% 80% at 50% 0%,#3a2a55,#141118);cursor:pointer;border:0;padding:0;width:100%;display:block}
+  .phone .shot{inset:24% 7% 40% 7%;border-radius:3px}
+  .phone .cam{width:50%;right:25%;bottom:13%;box-shadow:0 0 0 2px #fff}
+  .phone .hook{position:absolute;left:7%;right:20%;top:6%;font-weight:800;font-size:17px;line-height:1.12;color:#fff;text-align:left;text-shadow:0 2px 8px rgba(0,0,0,.6);z-index:2}
+  .phone .sub{position:absolute;left:50%;transform:translateX(-50%);bottom:5%;background:#1A1A1A;color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:2px;white-space:nowrap;z-index:2}
+  .phone .len{position:absolute;right:8px;top:8px;background:rgba(20,17,24,.9);font-size:var(--fs-xs);padding:2px 6px;border-radius:4px;z-index:3;font-variant-numeric:tabular-nums}
+  .phone .len.warn{color:var(--warn)}
+  .phone .po{position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,17,24,.3);opacity:0;transition:opacity var(--dur-fast);z-index:4}
+  .phone:hover .po,.phone:focus-visible .po{opacity:1}
+  .phone .po span{width:48px;height:48px;border-radius:50%;background:rgba(246,246,244,.95);color:#1A1620;display:grid;place-items:center}
+  .phone .po .ic{width:18px;height:18px;margin-left:2px}
+  .why{font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-muted);margin:0}
+  .fld{display:flex;flex-direction:column;gap:4px}
+  .fld label{font-size:var(--fs-xs);color:var(--fg-muted)}
+  .fld .input{font-weight:500}
+  .trim{display:flex;flex-direction:column;gap:8px}
+  .strip{position:relative;height:36px;background:var(--surface-2);border-radius:6px}
+  .strip .range{position:absolute;top:4px;bottom:4px;background:var(--purple-surface);box-shadow:inset 0 0 0 1px var(--purple-soft);border-radius:4px}
+  .strip .range::before,.strip .range::after{content:"";position:absolute;top:-2px;bottom:-2px;width:12px;background:var(--purple-soft);border-radius:4px}
+  .strip .range::before{left:-6px}.strip .range::after{right:-6px}
+  .tt{display:flex;flex-direction:column;gap:6px}
+  .nudge{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2)}
+  .nudge span{font-size:var(--fs-xs);color:var(--fg-muted)}
+  .nudge .row{display:flex;align-items:center;gap:2px;background:var(--surface-2);border-radius:6px;width:116px}
+  .nudge .row button{width:32px;height:32px;border:0;background:transparent;color:var(--fg);font-size:18px;line-height:1;cursor:pointer;border-radius:6px}
+  .nudge .row button:hover{background:var(--surface-3)}
+  .nudge .row output{flex:1;text-align:center;font-variant-numeric:tabular-nums;font-size:var(--fs-sm)}
+  .lenmsg{font-size:var(--fs-xs);color:var(--fg-muted);margin:0}
+  .lenmsg.warn{color:var(--warn)}
+  .acts{display:flex;gap:var(--space-2)}
+  .acts .keep{flex:1;min-width:0;justify-content:center}
+  .keep[aria-pressed="true"]{background:var(--purple-strong);color:#fff}
+  @media (max-width:560px){.grid{grid-template-columns:1fr 1fr;gap:var(--space-3)}.wrap{padding:var(--space-4) var(--space-3) var(--space-8)}.phone .hook{font-size:13px}.short{padding:var(--space-2)}}
+  .phone .shot{background:#0d0b10}
+  .phone video{width:100%;height:100%;object-fit:contain;display:block}
+  .phone .cam video{object-fit:cover}
+  .phone.mirror .cam video{transform:scaleX(-1)}
+  .phone.camonly .cam{width:100%;right:0;bottom:0;height:100%;border-radius:0;box-shadow:none;aspect-ratio:auto}
+  .phone.screenonly .shot{inset:24% 7% 24% 7%}
+  .short.playing .po{display:none}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="back" data-back href="/"><svg class="ic"><use href="/static/assets/icons.svg#arrow-left"/></svg><span>Back to the video</span></a>
+  <div class="right">
+    <button class="btn primary" id="dl" disabled><svg class="ic"><use href="/static/assets/icons.svg#download"/></svg><span id="dlText">Download shorts</span></button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="head">
+    <h1 class="page-title">Shorts from this video</h1>
+    <p id="intro"></p>
+    <a class="from" data-back href="/"><svg class="ic"><use href="/static/assets/icons.svg#video"/></svg><span id="fromText"></span></a>
+  </div>
+  <div class="empty" id="finding" hidden>
+    <span class="spin" style="width:28px;height:28px"></span>
+    <h2>Looking for parts that work as shorts</h2>
+    <p>LOOT is reading the transcript. This takes about a minute. You can go back to the video and keep editing, and come back here later.</p>
+    <a class="btn" data-back href="/">Back to the video</a>
+  </div>
+  <div class="empty" id="nothing" hidden>
+    <h2 id="nothingTitle">No part stood out as a short</h2>
+    <p id="nothingText">A short needs 30 to 60 seconds that make sense on their own. This video did not have one, which is common for videos under two minutes.</p>
+    <a class="btn" data-back href="/">Back to the video</a>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="none" hidden>
+    <h2>No shorts left</h2>
+    <p>You skipped every suggestion.</p>
+    <button class="btn" id="bring">Bring them back</button>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button id="toastUndo">Undo</button></div>
+
+<script src="/static/js/shorts.js"></script>
+</body>
+</html>

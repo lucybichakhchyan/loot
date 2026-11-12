@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Floating controller · LOOT</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  /* A stand-in for the site you are recording, with LOOT's small controller floating on top. */
+  body{background:#F6F6F4;color:#1A1A1A;min-height:100vh}
+  .site{max-width:960px;margin:0 auto;padding:32px 24px}
+  .site nav{display:flex;gap:20px;font-size:14px;color:#555;margin-bottom:40px}
+  .site nav b{color:#1A1A1A;margin-right:auto}
+  .site h1{font-size:40px;line-height:1.1;margin:0 0 12px;max-width:14em}
+  .site p{color:#555;max-width:34em}
+  .site .row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+  .site .row i{display:block;height:120px;background:#E6E3EE;border-left:3px solid #6A578F;border-radius:2px}
+  .ctl{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;background:#1E1A27;color:#F6F6F4;border-radius:14px;padding:6px 8px;box-shadow:0 16px 40px rgba(0,0,0,.35);font-family:var(--font-body);font-size:13px}
+  .ctl .t{display:flex;align-items:center;gap:8px;padding:0 10px;font-variant-numeric:tabular-nums;font-weight:500;font-size:15px}
+  .ctl .dot{width:8px;height:8px;border-radius:50%;background:var(--record);animation:blink 1.2s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .ctl.paused .dot{animation:none;opacity:.4}
+  .ctl button{display:flex;align-items:center;gap:6px;border:0;background:transparent;color:#F6F6F4;height:40px;padding:0 12px;border-radius:10px;cursor:pointer;font:inherit}
+  .ctl button:hover{background:#2D253A}
+  .ctl .stop{background:var(--record);color:#1A1620;font-weight:600}
+  .ctl .stop:hover{background:#EF7B74}
+  .ctl .sep{width:1px;height:22px;background:rgba(246,246,244,.18);margin:0 4px}
+  .tele{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);width:min(560px,calc(100vw - 24px));background:rgba(30,26,39,.94);color:#fff;border-radius:12px;padding:14px 18px;font-size:19px;line-height:28px;box-shadow:0 16px 40px rgba(0,0,0,.35)}
+  .tele[hidden]{display:none}
+  .tele small{display:block;font-size:12px;color:#BEADD6;margin-bottom:4px}
+  .note{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#1E1A27;color:#F6F6F4;font-size:13px;padding:8px 14px;border-radius:8px;width:max-content;max-width:calc(100vw - 24px)}
+  .note a{color:var(--purple-soft)}
+</style>
+</head>
+<body>
+<div class="note">This is the website being recorded. The bar at the bottom is LOOT's controller. <a href="states.html">Back to the list</a></div>
+<div class="site">
+  <nav><b>bichakhchyan.com</b><span>Work</span><span>Blog</span><span>Contact</span></nav>
+  <h1>Creative execution for teams who move fast</h1>
+  <p>Strategy, design and growth. I build, test and scale what matters.</p>
+  <div class="row"><i></i><i></i><i></i></div>
+</div>
+<div class="tele" id="tele" hidden><small>Script</small>For the budget, I split it so that eighty percent goes to the test and twenty percent is held back.</div>
+<div class="ctl" id="ctl" role="toolbar" aria-label="LOOT recording controls">
+  <span class="t"><span class="dot"></span><span id="t">0:12</span></span>
+  <button id="pause" aria-label="Pause"><svg class="ic"><use href="assets/icons.svg#pause"/></svg>Pause</button>
+  <button id="script" aria-pressed="false"><svg class="ic"><use href="assets/icons.svg#scroll-text"/></svg>Script</button>
+  <span class="sep"></span>
+  <button class="stop" id="stop"><svg class="ic" style="fill:currentColor"><use href="assets/icons.svg#square"/></svg>Stop</button>
+</div>
+<script>
+let s=12,p=false,tm;const f=n=>Math.floor(n/60)+':'+String(n%60).padStart(2,'0');
+function run(){clearInterval(tm);tm=setInterval(()=>{s++;document.getElementById('t').textContent=f(s);},1000);}
+run();
+document.getElementById('pause').onclick=e=>{p=!p;document.getElementById('ctl').classList.toggle('paused',p);e.currentTarget.lastChild.textContent=p?'Resume':'Pause';if(p)clearInterval(tm);else run();};
+document.getElementById('script').onclick=e=>{const on=document.getElementById('tele').hidden;document.getElementById('tele').hidden=!on;e.currentTarget.setAttribute('aria-pressed',on);};
+document.getElementById('stop').onclick=()=>location.href='recorder.html';
+document.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='p')document.getElementById('pause').click();});
+</script>
+</body>
+</html>

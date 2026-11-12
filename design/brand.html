@@ -33,6 +33,9 @@
   .card i{display:block;width:12%;height:2px;background:var(--acc)}
   .card span{font-size:clamp(10px,2.4cqh,18px)}
   .light .card,.light .mark{color:#1A1A1A}
+  .card.endc{align-items:center;text-align:center}
+  .card.endc img{width:16cqh;height:16cqh;min-width:36px;min-height:36px;border-radius:50%;background:#2D253A}
+  .card.endc b{font-size:clamp(16px,6.5cqh,48px)}
   .pagewrap{width:min(100cqw,calc(100cqh * 4 / 3));aspect-ratio:4/3;border-radius:10px;overflow:hidden;position:relative;box-shadow:0 0 0 1px var(--line)}
   .pagewrap iframe{position:absolute;left:0;top:0;width:1100px;height:825px;border:0;transform-origin:0 0}
 
@@ -47,12 +50,14 @@
   .logo .btn{margin-left:auto}
   .sec .field + .field,.sec .line + .field,.sec .field + .line{margin-top:var(--space-3)}
   .tile .cap{font-size:9px}
+  .show-s{display:none}
 
   @media (max-width:900px){
     .main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(170px,36vh) minmax(0,1fr)}
     .panel{border-left:0;border-top:1px solid var(--line)}
     .viewer{padding:var(--space-3)}
-    .modes .xs,.saved{display:none}
+    .modes .xs{display:none}
+    .hide-s{display:none}.show-s{display:inline}
   }
 </style>
 </head>
@@ -61,7 +66,7 @@
   <a class="back" href="index.html"><svg class="ic"><use href="assets/icons.svg#arrow-left"/></svg>Your videos</a>
   <span class="sep"></span>
   <span class="doc-title" style="border-color:transparent">Brand settings</span>
-  <div class="right"><span class="saved">Changes save on their own and apply to new videos</span></div>
+  <div class="right"><span class="saved"><span class="hide-s">Changes save on their own and apply to new videos</span><span class="show-s">Saved</span></span></div>
 </header>
 
 <main class="main">
@@ -71,6 +76,7 @@
         <button aria-pressed="true" data-m="video">Video</button>
         <button aria-pressed="false" data-m="short">Short</button>
         <button aria-pressed="false" data-m="card">Title card</button>
+        <button aria-pressed="false" data-m="end">Closing card</button>
         <button aria-pressed="false" data-m="page">Share page</button>
       </div>
       <span class="xs" id="modeNote">How a wide video looks with your brand</span>
@@ -82,6 +88,7 @@
         <div class="mark" id="mark">Lucy Bichakhchyan</div>
         <div class="cap" id="cap">write down <em>one</em> question</div>
         <div class="card" id="card" hidden><small>12 November 2026</small><b>How I plan a paid media test on a small budget</b><i></i><span id="cardName">Lucy Bichakhchyan</span></div>
+        <div class="card endc" id="endcard" hidden><img src="assets/avatar-256.png" alt=""><b id="endLine">More at bichakhchyan.com</b><i></i><span id="endName">Lucy Bichakhchyan</span></div>
       </div>
       <div class="pagewrap" id="pagewrap" hidden><iframe id="page" title="Share page preview" src="about:blank"></iframe></div>
     </div>
@@ -95,9 +102,9 @@
         <button class="sw" aria-pressed="true" aria-label="Violet glow" data-v="radial-gradient(120% 90% at 80% 10%,#3a2a55 0%,#1d1626 45%,#141118 100%)" style="background:radial-gradient(120% 90% at 80% 10%,#3a2a55,#141118)"></button>
         <button class="sw" aria-pressed="false" aria-label="Charcoal" data-v="#1A1A1A" style="background:#1A1A1A"></button>
         <button class="sw" aria-pressed="false" aria-label="Deep purple" data-v="#2D253A" style="background:#2D253A"></button>
-        <button class="sw" aria-pressed="false" aria-label="Bright purple" data-v="#8A2BE2" style="background:#8A2BE2"></button>
         <button class="sw" aria-pressed="false" aria-label="Off-white" data-v="#F6F6F4" data-light="1" style="background:#F6F6F4"></button>
-        <button class="sw add" aria-label="Add a color" title="Add a color">+</button>
+        <button class="sw" aria-pressed="false" aria-label="Bright purple" data-v="#8A2BE2" style="background:#8A2BE2"></button>
+        <button class="sw add" aria-label="Add a color" title="Add a color" data-add="bgs">+</button>
       </div>
       <div class="swrow"><span>Highlighted word in captions</span></div>
       <div class="swatches" id="accs" style="margin-bottom:0">
@@ -105,26 +112,26 @@
         <button class="sw" aria-pressed="false" aria-label="Bright purple" data-v="#8A2BE2" style="background:#8A2BE2"></button>
         <button class="sw" aria-pressed="false" aria-label="Warm gold" data-v="#E2C184" style="background:#E2C184"></button>
         <button class="sw" aria-pressed="false" aria-label="Off-white" data-v="#F6F6F4" style="background:#F6F6F4"></button>
-        <button class="sw add" aria-label="Add a color" title="Add a color">+</button>
+        <button class="sw add" aria-label="Add a color" title="Add a color" data-add="accs">+</button>
       </div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-pv="card">
       <div class="sech"><h3>Fonts</h3></div>
       <div class="two">
         <div class="field"><label class="label" for="hfont">Headlines</label><select class="select" id="hfont"><option value="serif">Playfair italic</option><option value="sans">Inter bold</option></select></div>
-        <div class="field"><label class="label" for="bfont">Captions and text</label><select class="select" id="bfont"><option>Inter</option></select></div>
+        <div class="field"><span class="label">Captions and text</span><div class="input" style="display:flex;align-items:center;color:var(--fg-muted)">Inter</div></div>
       </div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-pv="card">
       <div class="sech"><h3>Logo and name</h3></div>
-      <div class="logo"><img src="assets/avatar-256.png" alt="Your logo"><span class="xs muted">Shown on the share page and the title card</span><button class="btn outline">Replace</button></div>
+      <div class="logo"><img src="assets/avatar-256.png" alt="Your logo"><span class="xs muted">Shown on the share page and the title card</span><button class="btn outline" id="replaceLogo">Replace</button><input type="file" id="logoFile" accept="image/*" hidden></div>
       <div class="field"><label class="label" for="name">Name</label><input class="input" id="name" value="Lucy Bichakhchyan"></div>
       <div class="line"><span>Show my name in the corner of videos</span><button class="switch" role="switch" aria-checked="true" id="nameSwitch" aria-label="Show my name in the corner"></button></div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-pv="video">
       <div class="sech"><h3>Captions</h3></div>
       <p class="sub">The style new videos start with. You can still change it for one video in the editor.</p>
       <div class="tiles three" id="capStyles">
@@ -135,52 +142,54 @@
       <div class="line" style="margin-top:var(--space-4)"><span>Highlight one word in each line</span><button class="switch" role="switch" aria-checked="true" id="wordSwitch" aria-label="Highlight one word"></button></div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-pv="card">
       <div class="sech"><h3>Start and end of a video</h3></div>
       <div class="line"><span>Start with a title card</span><button class="switch" role="switch" aria-checked="true" aria-label="Start with a title card"></button></div>
-      <div class="line"><span>End with a closing card</span><button class="switch" role="switch" aria-checked="false" id="endSwitch" aria-label="End with a closing card"></button></div>
-      <div class="field dim" id="endField"><label class="label" for="endText">Closing line</label><input class="input" id="endText" value="More at bichakhchyan.com"></div>
+      <div class="line" data-pv="end"><span>End with a closing card</span><button class="switch" role="switch" aria-checked="false" id="endSwitch" aria-label="End with a closing card"></button></div>
+      <div class="field dim" id="endField" data-pv="end"><label class="label" for="endText">Closing line</label><input class="input" id="endText" value="More at bichakhchyan.com"></div>
     </div>
 
-    <div class="sec">
+    <div class="sec" data-pv="page">
       <div class="sech"><h3>Share page</h3></div>
       <p class="sub">The page people open when you send them a link.</p>
       <div class="line"><span>Show a button under the video</span><button class="switch" role="switch" aria-checked="true" id="ctaSwitch" aria-label="Show a button under the video"></button></div>
       <div id="ctaFields" style="margin-top:var(--space-3)">
         <div class="two">
           <div class="field"><label class="label" for="ctaText">Button text</label><input class="input" id="ctaText" value="Book a call"></div>
-          <div class="field"><label class="label" for="ctaLink">Button link</label><input class="input" id="ctaLink" value="bichakhchyan.com/contact"></div>
+          <div class="field"><label class="label" for="ctaLink">Button link</label><input class="input" id="ctaLink" value="bichakhchyan.com/contacts"></div>
         </div>
         <div class="swrow" style="margin-top:var(--space-3)"><span>Button color</span></div>
         <div class="swatches" id="btns" style="margin-bottom:0">
           <button class="sw" aria-pressed="true" aria-label="Bright purple" data-v="#8A2BE2" style="background:#8A2BE2"></button>
           <button class="sw" aria-pressed="false" aria-label="Soft purple" data-v="#AB8CF0" style="background:#AB8CF0"></button>
           <button class="sw" aria-pressed="false" aria-label="Off-white" data-v="#F6F6F4" style="background:#F6F6F4"></button>
-          <button class="sw add" aria-label="Add a color" title="Add a color">+</button>
+          <button class="sw add" aria-label="Add a color" title="Add a color" data-add="btns">+</button>
         </div>
       </div>
     </div>
   </aside>
 </main>
 
+<div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button id="toastUndo" hidden>Undo</button></div>
+
 <script>
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const pv=$('#pv'),frame=$('#frame');
 const isOn=id=>$(id).getAttribute('aria-checked')==='true';
 const S={mode:'video',cap:'',btn:'#8A2BE2'};
-const notes={video:'How a wide video looks with your brand',short:'How a vertical short looks',card:'The card a video can start with',page:'What people see when you share a link'};
+const notes={video:'How a wide video looks with your brand',short:'How a vertical short looks',card:'The card a video can start with',end:'The card a video can end with',page:'What people see when you share a link'};
 
 function pageUrl(){const p=new URLSearchParams({acc:S.btn,font:$('#hfont').value,cta:$('#ctaText').value,showcta:isOn('#ctaSwitch')?'1':'0',name:$('#name').value,compact:'1'});return 'watch.html?'+p;}
 function fitPage(){const w=$('#pagewrap').clientWidth;if(w)$('#page').style.transform='scale('+(w/1100)+')';}
 let pageTimer;function refreshPage(){clearTimeout(pageTimer);pageTimer=setTimeout(()=>{if(S.mode==='page'){$('#page').src=pageUrl();fitPage();}},250);}
 
 function apply(){
-  const m=S.mode,isCard=m==='card',isPage=m==='page';
+  const m=S.mode,isCard=m==='card'||m==='end',isPage=m==='page';
   frame.hidden=isPage;$('#pagewrap').hidden=!isPage;
   frame.classList.toggle('vertical',m==='short');
-  $('#shot').hidden=$('#cam').hidden=$('#cap').hidden=isCard;$('#card').hidden=!isCard;
+  $('#shot').hidden=$('#cam').hidden=$('#cap').hidden=isCard;$('#card').hidden=m!=='card';$('#endcard').hidden=m!=='end';$('#endLine').textContent=$('#endText').value||' ';
   $('#mark').hidden=isCard||!isOn('#nameSwitch');
-  $('#mark').textContent=$('#cardName').textContent=$('#name').value;
+  $('#mark').textContent=$('#cardName').textContent=$('#endName').textContent=$('#name').value;
   $('#cap').className='cap '+S.cap+(isOn('#wordSwitch')?'':' noword');
   $('#modeNote').textContent=notes[m];
   refreshPage();
@@ -194,7 +203,16 @@ $('#hfont').onchange=e=>{const sans=e.target.value==='sans';pv.style.setProperty
 $$('#capStyles .tile').forEach(o=>o.onclick=()=>{$$('#capStyles .tile').forEach(x=>x.setAttribute('aria-pressed',x===o));S.cap=o.dataset.c;apply();});
 $$('.switch').forEach(s=>s.addEventListener('click',()=>{s.setAttribute('aria-checked',s.getAttribute('aria-checked')!=='true');
   $('#endField').classList.toggle('dim',!isOn('#endSwitch'));$('#ctaFields').classList.toggle('dim',!isOn('#ctaSwitch'));apply();}));
-['#name','#ctaText'].forEach(id=>$(id).addEventListener('input',apply));
+['#name','#ctaText','#endText'].forEach(id=>$(id).addEventListener('input',apply));
+// The preview follows the section you are editing
+function toast(text){const t=$('#toast');$('#toastText').textContent=text;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,3000);}
+$$('.sec[data-pv]').forEach(sec=>{const go=e=>{const m=e.target.closest('[data-pv]').dataset.pv,b=$('#modes [data-m="'+m+'"]');if(b&&S.mode!==m)b.click();};sec.addEventListener('focusin',go);sec.addEventListener('click',go);});
+// "+" opens the color picker and adds that color to its row
+$$('[data-add]').forEach(b=>b.addEventListener('click',()=>{const inp=document.createElement('input');inp.type='color';inp.style.cssText='position:fixed;opacity:0;pointer-events:none';document.body.appendChild(inp);
+  inp.addEventListener('change',()=>{const sw=document.createElement('button');sw.className='sw';sw.setAttribute('aria-pressed','false');sw.setAttribute('aria-label','Your color '+inp.value);sw.dataset.v=inp.value;sw.style.background=inp.value;b.parentNode.insertBefore(sw,b);sw.click();toast('Color added.');});
+  inp.click();}));
+$('#replaceLogo').onclick=()=>$('#logoFile').click();
+$('#logoFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$$('.logo img, #endcard img').forEach(i=>i.src=r.result);toast('Logo replaced.');};r.readAsDataURL(f);};
 new ResizeObserver(fitPage).observe($('#pv'));
 apply();
 </script>

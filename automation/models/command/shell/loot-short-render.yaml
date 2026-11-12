@@ -1,0 +1,24 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: 986552d5-a213-48a5-8874-b0cf6ce98013
+name: loot-short-render
+version: 1
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+    short:
+      type: string
+      pattern: "^[a-z0-9]{6,12}$"
+      description: LOOT short id
+  required: ["project", "short"]
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine short ${{ inputs.project }} ${{ inputs.short }}'
+      workingDir: "/app"
+      timeout: 3600000

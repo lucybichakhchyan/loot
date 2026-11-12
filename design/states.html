@@ -33,6 +33,10 @@
   <h2>Home</h2>
   <div class="rows">
     <a class="r" href="index.html?state=empty"><b>No videos yet</b><span>The first time you open LOOT, before anything is recorded.</span></a>
+    <a class="r" href="index.html?state=uploading"><b>Uploading a video</b><span>A video file you added with Upload a video, while it uploads and then processes.</span></a>
+    <a class="r" href="index.html?state=sharing"><b>Preparing a shared video</b><span>A card while LOOT prepares the video for a link made with Share now.</span></a>
+    <a class="r" href="index.html?state=gif"><b>GIF copied</b><span>The small dialog after Copy GIF for email in a video's menu.</span></a>
+    <a class="r" href="index.html?state=gifcopy"><b>GIF ready, one more click to copy</b><span>When the browser refuses the first copy, the dialog offers a Copy the GIF button.</span></a>
     <a class="r" href="index.html?state=full"><b>Server out of space</b><span>Finished videos are waiting on the server and there is no room for new ones.</span></a>
   </div>
 
@@ -40,21 +44,39 @@
   <div class="rows">
     <a class="r" href="recorder.html?state=permission"><b>Permission not given yet</b><span>The browser hasn't been asked for the camera and microphone.</span></a>
     <a class="r" href="recorder.html?state=blocked"><b>Permission blocked</b><span>The browser is set to refuse the camera and microphone.</span></a>
+    <a class="r" href="recorder.html?state=recording"><b>Recording in progress</b><span>The bar while a take is running: timer, Pause, Start over and Discard.</span></a>
+    <a class="r" href="controller.html"><b>Floating controller</b><span>The small bar LOOT shows on top of the tab or window you are recording.</span></a>
     <a class="r" href="recorder.html?state=nomic"><b>No sound from the microphone</b><span>The chosen microphone is silent before you start.</span></a>
+    <a class="r" href="recorder.html?state=quietmic"><b>Very quiet microphone</b><span>The microphone works but the sound is very low.</span></a>
+    <a class="r" href="recorder.html?state=shared"><b>Share now</b><span>Skipping the editor after a recording and getting a link straight away.</span></a>
     <a class="r" href="recorder.html?state=uploadfail"><b>A clip didn't upload</b><span>The connection dropped while a clip was being sent to the server.</span></a>
   </div>
 
   <h2>Editor</h2>
   <div class="rows">
+    <a class="r" href="editor.html?state=details"><b>Title, description and chapters</b><span>What LOOT writes from the transcript after a recording, ready to edit or copy.</span></a>
+    <a class="r" href="editor.html?state=extras"><b>Blur and text on the video</b><span>A blurred area and a text overlay, each with its own row on the timeline.</span></a>
+    <a class="r" href="editor.html?state=crop"><b>Cropping the screen recording</b><span>Dragging the corners to keep only part of the screen.</span></a>
+    <a class="r" href="editor.html?state=share"><b>Share link and GIF for email</b><span>How long a link works, and the GIF preview to paste into an email.</span></a>
     <a class="r" href="editor.html?state=processing"><b>Transcript being written</b><span>Right after recording, while the server makes the transcript.</span></a>
     <a class="r" href="editor.html?state=notranscript"><b>Transcript failed</b><span>The transcript couldn't be made.</span></a>
     <a class="r" href="editor.html?state=exporting"><b>Export in progress</b><span>The video is being prepared for download.</span></a>
+    <a class="r" href="editor.html?state=exportdone"><b>Export finished</b><span>The video is on your drive. Offers Make shorts and Download again.</span></a>
     <a class="r" href="editor.html?state=exportfail"><b>Export failed</b><span>The export stopped before it finished.</span></a>
     <a class="r" href="editor.html?state=offline"><b>Offline</b><span>The internet connection dropped while editing.</span></a>
   </div>
 
+  <h2>Shorts</h2>
+  <div class="rows">
+    <a class="r" href="shorts.html?state=finding"><b>Looking for shorts</b><span>While LOOT reads the transcript to find parts that work as shorts.</span></a>
+    <a class="r" href="shorts.html?state=failed"><b>The search for shorts could not run</b><span>For example when LOOT cannot reach Claude.</span></a>
+    <a class="r" href="shorts.html?state=nothing"><b>No shorts found</b><span>The video had no part that works on its own.</span></a>
+  </div>
+
   <h2>Shared link</h2>
   <div class="rows">
+    <a class="r" href="watch.html?state=waiting"><b>Video still being prepared</b><span>What a viewer sees if they open a Share now link before the video is ready.</span></a>
+    <a class="r" href="watch.html?state=off"><b>Link turned off</b><span>What someone sees if they open a link you have turned off.</span></a>
     <a class="r" href="watch.html"><b>The viewer's page</b><span>What someone sees when you send them a link.</span></a>
   </div>
 </main>

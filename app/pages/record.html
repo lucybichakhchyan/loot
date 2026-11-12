@@ -155,6 +155,17 @@
   .clip .frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .recbtn[disabled]{opacity:.35;cursor:not-allowed}
   .script .text:empty::before{content:"Type or paste your script here.";color:var(--fg-faint)}
+  /* A very quiet microphone gets the yellow outline, and its level bar keeps moving */
+  .src.quiet{box-shadow:inset 0 0 0 1px var(--warn)}
+
+  /* GIF for email, in the Share now dialog */
+  .gif{display:flex;gap:var(--space-3);align-items:center;background:var(--surface-2);border-radius:8px;padding:var(--space-2);text-align:left}
+  .gif[hidden]{display:none}
+  .gif .frame{width:140px;flex:none}
+  .gif .frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+  .gif .tagg{position:absolute;left:6px;top:6px;background:rgba(20,17,24,.85);font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;z-index:3;color:#fff}
+  .gif p{margin:0 0 6px;font-size:var(--fs-xs);line-height:var(--lh-xs);color:var(--fg-muted)}
+  #shGifNote[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -223,6 +234,7 @@
         <button class="btn sm" id="retryUp">Try again</button>
       </div>
       <span class="sum" id="sum"></span>
+      <button class="btn outline lg" id="shareNow" title="Skip the editor and get a link you can send right away" disabled><svg class="ic"><use href="/static/assets/icons.svg#share-2"/></svg><span>Share now</span></button>
       <button class="btn primary lg" id="editBtn" disabled>Edit video</button>
     </div>
   </div>
@@ -257,6 +269,23 @@
     </div>
   </div>
 </footer>
+
+<div class="scrim" id="shareDlg" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <div class="dh"><h2 id="shTitle">Link copied</h2><button class="iconbtn" id="shClose" aria-label="Close"><svg class="ic"><use href="/static/assets/icons.svg#x"/></svg></button></div>
+    <p class="xs muted" style="margin:0" id="shNote">You can send it now. LOOT is still writing the title and the captions, and the page fills them in by itself when they are ready.</p>
+    <div class="linkrow"><input class="input" id="shLink" readonly value="" aria-label="Share link"><button class="btn" id="shCopy">Copy again</button></div>
+    <small class="xs" id="shRefused" style="color:var(--warn)" hidden>Your browser did not allow the copy. The link is selected, so press Cmd+C.</small>
+    <div class="line"><label for="shLife">The link works for</label><select class="select" id="shLife" style="width:180px"><option value="1">1 day</option><option value="7" selected>7 days</option><option value="30">30 days</option><option value="0">Until I turn it off</option></select></div>
+    <div class="two"><button class="btn outline" id="shGif" style="height:40px" disabled><svg class="ic"><use href="/static/assets/icons.svg#mail"/></svg><span id="shGifText">Copy GIF for email</span></button><a class="btn outline" id="shOpen" href="/" target="_blank" rel="noopener" style="height:40px">Open the page</a></div>
+    <p class="xs muted" style="margin:0" id="shGifNote">The GIF is made from the finished video. You can copy it here as soon as the video is ready.</p>
+    <div class="gif" id="shGifBox" hidden>
+      <div class="frame"><img id="shGifImg" alt="The GIF: the start of the video with a play button on top"><span class="tagg">GIF</span></div>
+      <div><p>The first 3 seconds on a loop, without sound, with a play button on top. In an email it opens the share page when clicked.</p><a class="btn sm" id="shGifDl" download>Download the GIF</a></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-top:var(--space-2)"><a class="btn quiet" id="shEdit" href="/">Edit this video</a><a class="btn primary" href="/" id="shDone">Done</a></div>
+  </div>
+</div>
 
 <div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button id="toastUndo">Undo</button></div>
 

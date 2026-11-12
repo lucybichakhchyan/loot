@@ -74,7 +74,7 @@ let audioCtx, analyser, levelTimer;
 document.addEventListener('pointerdown', () => { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, true);
 async function startMic() {
   stopStream(micStream); micStream = null; clearInterval(levelTimer); $('#noSound').hidden = true;
-  $('.src[data-src="mic"]').classList.remove('bad');
+  $('.src[data-src="mic"]').classList.remove('bad', 'quiet');
   if (!on.mic) { $('#lvl').style.width = '0'; return; }
   try {
     micStream = await navigator.mediaDevices.getUserMedia({
@@ -100,8 +100,9 @@ async function startMic() {
       const silent = now - lastSound > 4000;
       const quiet = !silent && now - heardAt < 3000 && now - lastLoud > 12000;
       $('#noSound').hidden = !(silent || quiet) || busy(); $('.src[data-src="mic"]').classList.toggle('bad', silent);
+      $('.src[data-src="mic"]').classList.toggle('quiet', quiet);
       if (silent) { $('#noSoundTitle').textContent = `No sound is coming from ${name}.`; $('#noSoundHelp').textContent = 'Check that it is plugged in and not muted, or pick another microphone.'; }
-      else if (quiet) { $('#noSoundTitle').textContent = `${name} is very quiet.`; $('#noSoundHelp').textContent = 'LOOT will turn it up, but it sounds better if you move closer or raise Input volume in System Settings, Sound.'; }
+      else if (quiet) { $('#noSoundTitle').textContent = 'Your microphone is very quiet.'; $('#noSoundHelp').textContent = 'LOOT will raise the volume afterwards, but it sounds better if you move closer or pick another microphone.'; }
     }, 120);
   } catch (e) { setSource('mic', false); label('mic', 'Not available'); }
 }
@@ -130,6 +131,7 @@ async function fillDevices() {
     const list = devices.filter(d => d.kind === type && d.label && d.deviceId !== 'communications');
     menu.innerHTML = `<div class="mh">${src === 'camera' ? 'Camera' : 'Microphone'}</div>` +
       list.map(d => `<button role="menuitemradio" aria-checked="${on[src] && d.deviceId === current}" data-v="${d.deviceId}">${icon('check')}${d.label.replace(/\s*\(.*\)$/, '')}</button>`).join('') +
+      (src === 'camera' ? `<hr><button role="menuitemcheckbox" aria-checked="${mirrorOn}" data-mirror>${icon('check')}Mirror my camera</button>` : '') +
       `<hr><button role="menuitemradio" aria-checked="${!on[src]}" data-v="off">${icon('check')}${offText}</button>`;
   }
 }
@@ -142,7 +144,14 @@ $$('.src[aria-haspopup]').forEach(btn => {
   const menu = btn.nextElementSibling, src = btn.dataset.src; btn.title = $('b', btn).textContent;
   btn.addEventListener('click', e => { e.stopPropagation(); if (busy()) return; if (menu.hidden) openMenu(btn); else closeMenus(); });
   menu.addEventListener('click', async e => {
-    const o = e.target.closest('button'); if (!o) return; closeMenus(); btn.focus();
+    const o = e.target.closest('button'); if (!o) return;
+    if (o.hasAttribute('data-mirror')) {
+      // The same setting as the editor's Mirror my camera switch. The preview flips at once and the menu stays open.
+      e.stopPropagation(); mirrorOn = !mirrorOn; o.setAttribute('aria-checked', mirrorOn); B.classList.toggle('mirror', mirrorOn);
+      try { localStorage.setItem('loot-mirror', mirrorOn ? '1' : '0'); } catch (err) { /* private window */ }
+      return;
+    }
+    closeMenus(); btn.focus();
     const off = o.dataset.v === 'off';
     setSource(src, !off); if (!off) chosen[src] = o.dataset.v;
     await (src === 'camera' ? startCamera() : startMic());
@@ -209,10 +218,15 @@ scriptText.addEventListener('input', () => { try { localStorage.setItem('loot-sc
 let scrollTimer;
 function autoScroll(run) {
   clearInterval(scrollTimer); if (!run) return;
-  scriptText.style.scrollBehavior = 'auto'; scriptText.scrollTop = 0; let pos = 0;
+  // The script becomes plain paragraphs for the take, so the one being read can be marked.
+  const lines = scriptText.innerText.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  scriptText.innerHTML = ''; lines.forEach(l => { const p = document.createElement('p'); p.textContent = l; scriptText.appendChild(p); });
+  scriptText.style.scrollBehavior = 'auto'; scriptText.scrollTop = 0; let pos = 0; scriptLine();
   scrollTimer = setInterval(() => {
-    if (B.classList.contains('paused') || $('#scrollSwitch').getAttribute('aria-checked') !== 'true') return;
-    pos += (+$('#scrollSpeed').value / 100) * 3 + 0.3; scriptText.scrollTop = pos;
+    if (B.classList.contains('paused')) return;
+    if ($('#scrollSwitch').getAttribute('aria-checked') === 'true') { pos += (+$('#scrollSpeed').value / 100) * 3 + 0.3; scriptText.scrollTop = pos; }
+    else pos = scriptText.scrollTop;
+    scriptLine();
   }, 50);
 }
 
@@ -235,6 +249,7 @@ function renderClips(fresh) {
   $('#upFail').hidden = failed < 0;
   if (failed >= 0) $('#upFailText').textContent = `Clip ${existingClips + failed + 1} didn't upload.`;
   $('#editBtn').disabled = !(list.length || existingClips) || list.some(k => k.state !== 'ok') || busy();
+  $('#shareNow').disabled = $('#editBtn').disabled || sharing;
   idleLabel();
 }
 function clipNumber() { return existingClips + (retaking ? shown().indexOf(retaking) + 1 : shown().length + 1); }
@@ -323,7 +338,7 @@ function saveTitle() {
 }
 $('.doc-title').addEventListener('blur', saveTitle);
 $('.doc-title').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
-let leaving = false;
+let leaving = false, sharing = false;
 $('#editBtn').onclick = async () => {
   $('#editBtn').disabled = true; $('#editBtn').textContent = 'Opening the editor…';
   await flushRemovals(); await saveTitle();
@@ -345,19 +360,52 @@ function snapshot() {
 }
 
 // A small always-on-top controller, so a take can be paused or stopped from the tab being recorded.
+// Its Script button shows the paragraph being read, so the script can be followed without coming back here.
 let pip = null;
+const pipIcon = n => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><use href="${location.origin}/static/assets/icons.svg#${n}"/></svg>`;
 async function openController() {
   if (!on.screen || !window.documentPictureInPicture || pip) return;
   try {
-    pip = await documentPictureInPicture.requestWindow({ width: 300, height: 64 });
-    pip.document.body.innerHTML = `<style>body{margin:0;height:100vh;display:flex;align-items:center;gap:8px;padding:0 12px;background:#1A1620;color:#F6F6F4;font:500 14px/1 Inter,system-ui,sans-serif}
-      i{width:9px;height:9px;border-radius:50%;background:#E66A63;display:block}#t{font-variant-numeric:tabular-nums;font-size:17px;min-width:44px}
-      button{font:inherit;font-size:13px;height:36px;padding:0 12px;border-radius:6px;border:0;background:#342B45;color:inherit;cursor:pointer}button:hover{background:#3d3452}
-      #s{background:#E66A63;color:#fff;margin-left:auto}</style><i></i><span id="t">0:00</span><button id="p">Pause</button><button id="s">Stop</button>`;
-    pip.document.getElementById('p').onclick = () => $('#pause').click();
-    pip.document.getElementById('s').onclick = () => { if (B.classList.contains('recording')) stop(true); else stop(false); };
+    pip = await documentPictureInPicture.requestWindow({ width: 380, height: 64 });
+    pip.document.body.innerHTML = `<style>
+      body{margin:0;background:#1E1A27;color:#F6F6F4;font:13px/1.3 Inter,system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;height:100vh}
+      .tele{flex:1;min-height:0;overflow:auto;padding:12px 16px;font-size:18px;line-height:27px;border-bottom:1px solid rgba(246,246,244,.14)}
+      .tele[hidden]{display:none}.tele small{display:block;font-size:12px;color:#BEADD6;margin-bottom:4px}
+      .ctl{display:flex;align-items:center;gap:4px;padding:6px 8px;flex:none}
+      .t{display:flex;align-items:center;gap:8px;padding:0 10px;font-variant-numeric:tabular-nums;font-weight:500;font-size:15px}
+      .dot{width:8px;height:8px;border-radius:50%;background:#E66A63;animation:blink 1.2s infinite}@keyframes blink{50%{opacity:.25}}
+      .paused .dot{animation:none;opacity:.4}
+      button{display:flex;align-items:center;gap:6px;border:0;background:transparent;color:#F6F6F4;height:40px;padding:0 12px;border-radius:10px;cursor:pointer;font:inherit}
+      button:hover{background:#2D253A}button[aria-pressed="true"]{background:#2D253A}
+      .stop{background:#E66A63;color:#1A1620;font-weight:600;margin-left:auto}.stop:hover{background:#EF7B74}
+      .sep{width:1px;height:22px;background:rgba(246,246,244,.18);margin:0 4px}</style>
+      <div class="tele" id="tele" hidden><small>Script</small><span id="line"></span></div>
+      <div class="ctl" id="ctl" role="toolbar" aria-label="LOOT recording controls">
+        <span class="t"><span class="dot"></span><span id="t">0:00</span></span>
+        <button id="p" aria-label="Pause">${pipIcon('pause')}<span id="pl">Pause</span></button>
+        <button id="sc" aria-pressed="false">${pipIcon('scroll-text')}Script</button>
+        <span class="sep"></span>
+        <button class="stop" id="s">${pipIcon('square')}Stop</button>
+      </div>`;
+    const doc = pip.document;
+    doc.getElementById('p').onclick = () => $('#pause').click();
+    doc.getElementById('s').onclick = () => stop(B.classList.contains('recording'));
+    doc.getElementById('sc').onclick = e => {
+      const show = doc.getElementById('tele').hidden; doc.getElementById('tele').hidden = !show; e.currentTarget.setAttribute('aria-pressed', show);
+      try { pip.resizeTo(show ? 520 : 380, show ? 230 : 64 + (pip.outerHeight - pip.innerHeight)); } catch (err) { /* the window keeps its size */ }
+      scriptLine();
+    };
+    doc.addEventListener('keydown', e => { if (e.key.toLowerCase() === 'p') $('#pause').click(); });
     pip.addEventListener('pagehide', () => { pip = null; });
   } catch (e) { pip = null; }
+}
+// The paragraph being read: shown brighter in the script panel, and in the controller when its Script is open.
+function scriptLine() {
+  const ps = $$('p', scriptText); if (!ps.length) return;
+  const top = scriptText.scrollTop + 24;
+  let now = ps.find(p => p.offsetTop + p.offsetHeight > top) || ps[ps.length - 1];
+  ps.forEach(p => p.classList.toggle('now', p === now));
+  if (pip) { const line = pip.document.getElementById('line'); if (line) line.textContent = now.textContent; }
 }
 function closeController() { if (pip) { try { pip.close(); } catch (e) { /* already closed */ } pip = null; } }
 
@@ -433,7 +481,7 @@ $('#restart').onclick = () => { const slot = retaking; stop(false); retaking = s
 $('#pause').onclick = () => {
   if (!B.classList.contains('recording')) return;
   const p = B.classList.toggle('paused'); $('#pauseLbl').textContent = p ? 'Resume' : 'Pause';
-  if (pip) pip.document.getElementById('p').textContent = p ? 'Resume' : 'Pause';
+  if (pip) { pip.document.getElementById('pl').textContent = p ? 'Resume' : 'Pause'; pip.document.getElementById('ctl').classList.toggle('paused', p); }
   if (p) { pausedAt = performance.now(); recorders.forEach(r => r.state === 'recording' && r.pause()); }
   else { pausedFor += performance.now() - pausedAt; recorders.forEach(r => r.state === 'paused' && r.resume()); }
   idleLabel();
@@ -449,10 +497,137 @@ document.addEventListener('keydown', e => {
   if (e.target.closest('textarea,input,select,[contenteditable="true"]')) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key.toLowerCase();
+  if (!$('#shareDlg').hidden) return;
   if (k === 'r' && !B.classList.contains('noperm')) $('#rec').click();
   if (k === 'p' && B.classList.contains('recording')) $('#pause').click();
   if (k === 'escape' && B.classList.contains('counting')) stop(false);
 });
+// ---------- Share now: skip the editor and get a link straight away ----------
+// LOOT makes the link at once, then processes and exports the video by itself. The page behind the link waits for it.
+let share = null, shareTimer = null;
+const until = u => u ? `until ${u}` : 'until you turn it off';
+const shareUrl = () => location.origin + share.path;
+// Copying. The Claude app's browser pane refuses the Clipboard API, and Safari refuses a copy that starts after
+// the click. So text that is already known is copied at once, inside the click, with the browser's own copy command.
+function copyNow(text, html) {
+  if (!text) return false;
+  const back = document.activeElement, ta = document.createElement('textarea');
+  ta.value = text; ta.setAttribute('readonly', ''); Object.assign(ta.style, { position: 'fixed', top: '0', left: '-9999px', opacity: '0' });
+  (document.querySelector('.scrim:not([hidden]) .dialog') || document.body).appendChild(ta);
+  const put = e => { e.clipboardData.setData('text/plain', text); if (html) e.clipboardData.setData('text/html', html); e.preventDefault(); };
+  document.addEventListener('copy', put);
+  ta.focus(); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  document.removeEventListener('copy', put); ta.remove();
+  if (back && back.focus) back.focus({ preventScroll: true });
+  return ok;
+}
+// Copy text that is known now, or that the server is still making (the clipboard is then handed a promise).
+// Gives back true when it was copied.
+function copyLater(text, html) {
+  if (typeof text === 'string') {
+    if (copyNow(text, html)) return Promise.resolve(true);
+    if (!navigator.clipboard) return Promise.resolve(false);
+    if (html && window.ClipboardItem) return navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([text], { type: 'text/plain' }), 'text/html': new Blob([html], { type: 'text/html' }) })]).then(() => true, () => false);
+    return navigator.clipboard.writeText(text).then(() => true, () => false);
+  }
+  const blob = Promise.resolve(text).then(t => { if (!t) throw new Error('nothing to copy'); return new Blob([t], { type: 'text/plain' }); });
+  blob.catch(() => {});
+  try {
+    if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) return navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]).then(() => true, () => false);
+  } catch (e) { /* nothing more can be done in this click */ }
+  return Promise.resolve(false);
+}
+const copyText = text => copyLater(text);
+function showShare() {
+  $('#shLink').value = shareUrl(); $('#shOpen').href = share.path; $('#shEdit').href = `/edit/${project}`;
+  $('#shNote').textContent = share.ready ? 'You can send it now. The video, its title and its captions are ready.'
+    : share.failed ? 'LOOT could not prepare this video, so the link does not play yet. Open the video in the editor and export it there.'
+    : 'You can send it now. LOOT is still writing the title and the captions, and the page fills them in by itself when they are ready.';
+  $('#shGif').disabled = !share.ready; $('#shGifNote').hidden = !!share.ready;
+}
+function watchShare() {
+  clearTimeout(shareTimer); if ($('#shareDlg').hidden || !share || share.ready) return;
+  shareTimer = setTimeout(async () => {
+    try { const r = await fetch(`/api/projects/${project}/share`); if (r.ok) { share = await r.json(); showShare(); } } catch (e) { /* asks again in a moment */ }
+    watchShare();
+  }, 4000);
+}
+function closeShare() { $('#shareDlg').hidden = true; clearTimeout(shareTimer); $('#shareNow').focus(); }
+$('#shareNow').onclick = async () => {
+  if (busy() || $('#shareNow').disabled) return;
+  sharing = true; renderClips(); $('#shareNow span').textContent = 'Creating the link…';
+  let why = '', made = null;
+  // The copy starts inside the click and gets the link when the server has made it. Safari refuses a later copy.
+  const link = (async () => {
+    try {
+      await flushRemovals(); await saveTitle();
+      const r = await fetch(`/api/projects/${project}/share-now`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const j = await r.json(); if (r.ok) made = j; else why = typeof j.detail === 'string' ? j.detail : '';
+    } catch (e) { /* no connection */ }
+    return made ? location.origin + made.path : null;
+  })();
+  const copied = await copyLater(link); await link;
+  sharing = false; $('#shareNow span').textContent = 'Share now'; renderClips();
+  if (!made) return toast(why || "The link couldn't be created. Check your connection and try again.");
+  share = made;
+  $('#shTitle').textContent = copied ? 'Link copied' : 'Your link is ready';
+  $('#shCopy').textContent = copied ? 'Copy again' : 'Copy the link';
+  $('#shLife').value = String(share.days); $('#shGifBox').hidden = true;
+  showShare(); $('#shareDlg').hidden = false; watchShare();
+  // In a browser that only copies inside a click, the link is shown ready and the Copy button copies it.
+  $('#shRefused').hidden = copied; $('#shRefused').textContent = 'The link is ready. Press Copy.';
+  if (!copied) { $('#shTitle').textContent = 'Your link is ready'; $('#shCopy').textContent = 'Copy'; }
+  $('#shCopy').focus();
+};
+$('#shClose').onclick = closeShare;
+$('#shareDlg').addEventListener('click', e => { if (e.target.id === 'shareDlg') closeShare(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#shareDlg').hidden) closeShare(); });
+$('#shCopy').onclick = async () => {
+  const ok = await copyText(shareUrl());
+  $('#shRefused').hidden = ok; $('#shRefused').textContent = 'Your browser did not allow the copy. The link is selected, so press Cmd+C.';
+  if (!ok) { $('#shLink').focus(); $('#shLink').select(); return; }
+  $('#shTitle').textContent = 'Link copied';
+  $('#shCopy').textContent = 'Copied'; setTimeout(() => { $('#shCopy').textContent = 'Copy again'; }, 2000);
+};
+$('#shLink').onfocus = e => e.target.select();
+$('#shLife').onchange = async e => {
+  let next = null;
+  try { const r = await fetch(`/api/projects/${project}/share`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ days: +e.target.value }) }); if (r.ok) next = await r.json(); } catch (err) { /* no connection */ }
+  if (!next) { e.target.value = String(share.days); return toast("That couldn't be changed. Try again."); }
+  share = next; showShare(); toast(`The link now works ${until(share.until)}.`);
+};
+// Copy GIF for email: the GIF goes on the clipboard with the link attached, and a small preview shows what was copied.
+let shGifReady = false;   // the GIF is made, so the next click can copy it at once
+function shGifHtml() {
+  const link = shareUrl(), title = $('.doc-title').textContent.trim();
+  const alt = (title && title !== 'Untitled video' ? `Watch the video: ${title}` : 'Watch the video').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  return `<a href="${link}"><img src="${link}/gif" alt="${alt}" width="${shape === 'tall' ? 270 : 480}"></a>`;
+}
+$('#shGif').onclick = async () => {
+  const link = shareUrl(), html = shGifHtml();
+  if (shGifReady && copyNow(link, html)) return toast('GIF copied. Paste it into your email.');
+  $('#shGif').disabled = true; $('#shGifText').textContent = 'Making the GIF…';
+  // LOOT makes the GIF the first time it is asked for. The copy waits for it, so a GIF that failed is never pasted.
+  const gif = fetch(`/api/projects/${project}/gif`).then(r => { if (!r.ok) throw new Error('gif'); return r.blob(); });
+  gif.catch(() => {});
+  let copied = false;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({
+      'text/html': gif.then(() => new Blob([html], { type: 'text/html' })),
+      'text/plain': gif.then(() => new Blob([link], { type: 'text/plain' })) })]);
+    copied = true;
+  } catch (e) { /* this browser needs a second click: see below */ }
+  let blob = null; try { blob = await gif; } catch (e) { /* said below */ }
+  $('#shGif').disabled = false; $('#shGifText').textContent = 'Copy GIF for email';
+  if (!blob) return toast("The GIF couldn't be made. Try again in a moment.");
+  shGifReady = true;
+  if ($('#shGifImg').src.startsWith('blob:')) URL.revokeObjectURL($('#shGifImg').src);
+  $('#shGifImg').src = URL.createObjectURL(blob); $('#shGifDl').href = `/api/projects/${project}/gif`; $('#shGifBox').hidden = false;
+  if (copied) return toast('GIF copied. Paste it into your email.');
+  $('#shGif').focus(); toast('The GIF is ready. Press Copy GIF for email again to copy it.');
+};
+
 window.addEventListener('beforeunload', e => {
   if (!leaving && (B.classList.contains('recording') || clips.some(k => !k.gone && k.state !== 'ok'))) { e.preventDefault(); e.returnValue = ''; }
 });

@@ -81,7 +81,7 @@ jobs:
         weight: 0
         allowFailure: true
       - name: describe
-        description: Claude writes a short title and description from the transcript; fills them in only where Lucy has not typed her own, and reuses a saved answer when the transcript is unchanged
+        description: Claude writes a short title and description from the transcript; fills them in only where the owner has not typed their own, and reuses a saved answer when the transcript is unchanged
         task:
           type: behavior
           behavior: loot-describe

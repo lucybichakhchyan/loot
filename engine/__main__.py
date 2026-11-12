@@ -1,11 +1,12 @@
 """Run one engine step: python -m engine <step> [project id]."""
 import sys
 
-from . import media, render, upkeep, words
+from . import media, render, share, upkeep, words
 
 PROJECT_STEPS = {
     "prepare": media.prepare, "assemble": media.assemble, "silences": media.silences,
     "fillers": words.fillers, "cuts": words.cuts, "describe": words.describe, "render": render.render,
+    "gif": share.gif,   # the small looping GIF for an email, made from the exported video
 }
 PLAIN_STEPS = {"cleanup": upkeep.cleanup, "health": upkeep.health}
 
@@ -31,6 +32,10 @@ def main() -> None:
         process(args[1])
     elif args[:1] == ["describe-again"] and len(args) == 2:
         words.describe(args[1], again=True)
+    elif args[:1] == ["short"] and len(args) == 3:
+        render.render_short(args[1], args[2])
+    elif args[:1] == ["shorts"] and len(args) == 2:
+        words.shorts(args[1])
     elif args[:1] == ["prep"] and len(args) == 3:
         media.prep(args[1], args[2])
     elif args and args[0] in PROJECT_STEPS and len(args) == 2:

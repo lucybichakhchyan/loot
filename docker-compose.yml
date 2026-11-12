@@ -1,20 +1,21 @@
-# LOOT runs next to n8n and is reached only through Traefik (no ports are published).
+# LOOT is reached through Traefik, which handles the web address and HTTPS (no ports are published).
+# LOOT_DOMAIN, and everything else personal, is set in .env next to this file.
 services:
   loot:
     build: .
     restart: unless-stopped
     env_file: .env
     environment:
-      - TZ=America/Chicago
+      - TZ=${LOOT_TZ:-America/Chicago}
     labels:
       - traefik.enable=true
-      - traefik.http.routers.loot.rule=Host(`loot.bichakhchyan.com`)
+      - traefik.http.routers.loot.rule=Host(`${LOOT_DOMAIN:?Set LOOT_DOMAIN in .env}`)
       - traefik.http.routers.loot.entrypoints=websecure
       - traefik.http.routers.loot.tls.certresolver=letsencrypt
       - traefik.http.services.loot.loadbalancer.server.port=8000
     volumes:
       - loot_data:/data
-    # Leave room for n8n: LOOT may use at most 5 GB of memory and 1.75 of the 2 cores.
+    # Leave room for other services on a small server: at most 5 GB of memory and 1.75 of 2 cores.
     mem_limit: 5g
     cpus: 1.75
 

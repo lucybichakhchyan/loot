@@ -194,20 +194,33 @@ def cuts(pid: str) -> None:
     print(f"cuts: {len(good)} suggested, {dropped} dropped by the check")
 
 
-DETAILS_VERSION = "details-v1"
+DETAILS_VERSION = "details-v2"
 TITLE_MAX, DESCRIPTION_MAX = 60, 200
 DETAILS_SCHEMA = {
     "type": "object",
     "properties": {
         "title": {"type": "string", "description": "At most 60 characters"},
         "description": {"type": "string", "description": "One or two sentences, at most 200 characters"},
+        "chapters": {
+            "type": "array",
+            "description": "Chapters for YouTube, in order. Empty when the video is too short or is about one thing.",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "sentence": {"type": "integer", "description": "The number in brackets of the sentence where the chapter starts"},
+                    "name": {"type": "string", "description": "At most 40 characters"},
+                },
+                "required": ["sentence", "name"],
+                "additionalProperties": False,
+            },
+        },
     },
-    "required": ["title", "description"],
+    "required": ["title", "description", "chapters"],
     "additionalProperties": False,
 }
 DETAILS_PROMPT = """Write a title and a description for a video, from its transcript below.
 
-The owner's rules for the wording, in her words: "Super short, to the point, no fluff, simple human language \
+The rules for the wording: "Super short, to the point, no fluff, simple human language \
 text, no sycophantism."
 
 - Title: at most 60 characters. Say what the video is about, the way a person would say it to a friend.
@@ -216,7 +229,47 @@ text, no sycophantism."
 - Do not start with "In this video" or anything like it. Do not use a colon in the title.
 - Use only what is in the transcript. If the transcript is only a sound check or too short to tell what the
   video is about, give a plain, literal title such as "Sound check" and a one-sentence description of what is said.
+- Chapters: the places where the video moves on to a new subject, for YouTube. Each sentence of the transcript
+  starts with its number in brackets; give the number of the sentence where each chapter starts, and a name of
+  at most 40 characters in the same plain wording. The first chapter starts at the first sentence. Give 3 to 8
+  chapters, at least 10 seconds apart. If the video is shorter than a minute or stays on one subject, give none.
 """
+CHAPTER_MAX, CHAPTER_GAP = 40, 10.0
+
+
+def _numbered_sentences(words: list) -> tuple[str, list]:
+    """The transcript as numbered sentences with their start times, so Claude can point at a sentence."""
+    lines, starts, current = [], [], []
+    for w in words:
+        if not current:
+            starts.append(float(w["start"]))
+        current.append(str(w["w"]))
+        if str(w["w"]).rstrip()[-1:] in ".?!":
+            lines.append(current)
+            current = []
+    if current:
+        lines.append(current)
+    text = "\n".join(f"[{n}] ({int(starts[n] // 60)}:{int(starts[n] % 60):02d}) {' '.join(c)}" for n, c in enumerate(lines))
+    return text, starts
+
+
+def _check_chapters(answer: list, starts: list) -> list:
+    """Keep only chapters that point at a real sentence, in order and far enough apart. YouTube needs three."""
+    found = []
+    for c in answer or []:
+        n = c.get("sentence")
+        name = _shorten(c.get("name", ""), CHAPTER_MAX)
+        if not isinstance(n, int) or not 0 <= n < len(starts) or not name:
+            continue
+        found.append({"t": round(starts[n], 2), "n": name})
+    found.sort(key=lambda c: c["t"])
+    kept = []
+    for c in found:
+        if not kept:
+            kept.append({**c, "t": 0.0})          # YouTube needs the first chapter at 0:00
+        elif c["t"] - kept[-1]["t"] >= CHAPTER_GAP:
+            kept.append(c)
+    return kept if len(kept) >= 3 else []
 
 
 def _shorten(text: str, limit: int) -> str:
@@ -261,10 +314,12 @@ def describe(pid: str, again: bool = False) -> None:
     """
     d = project_dir(pid)
     out = d / "details.json"
-    text = (read_json(d / "transcript.json", {}) or {}).get("text", "").strip()
+    transcript = read_json(d / "transcript.json", {}) or {}
+    text = transcript.get("text", "").strip()
     if not text:
         print("describe: there is no speech to write from")
         return
+    numbered, starts = _numbered_sentences(transcript.get("words") or [])
     if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
         if again:
             raise SystemExit("describe: no Claude API key is set on the server")
@@ -279,9 +334,10 @@ def describe(pid: str, again: bool = False) -> None:
     if again:
         avoid = read_json(d / "details_avoid.json") or {}
         prompt += f"\nShe already has this version and wants a different one. Do not repeat it:\nTitle: {avoid.get('title', '')}\nDescription: {avoid.get('description', '')}\n"
-    answer = _ask_json(prompt + "\nTranscript:\n" + text[:60000], DETAILS_SCHEMA)
+    answer = _ask_json(prompt + "\nTranscript:\n" + (numbered or text)[:60000], DETAILS_SCHEMA)
     result = {"title": _shorten(answer.get("title", ""), TITLE_MAX) or "Untitled video",
-              "description": _shorten(answer.get("description", ""), DESCRIPTION_MAX)}
+              "description": _shorten(answer.get("description", ""), DESCRIPTION_MAX),
+              "chapters": _check_chapters(answer.get("chapters"), starts)}
     if again:
         print(json.dumps(result))
         return
@@ -291,6 +347,97 @@ def describe(pid: str, again: bool = False) -> None:
         fields["title"] = result["title"]
     if (status.get("description") or "") in ("", saved.get("description")):
         fields["description"] = result["description"]
+    fields["chapters"] = result["chapters"]      # her own chapters live in the edit and win over these
     write_json(out, {**result, "fingerprint": fingerprint})
     set_status(pid, step={"describe": "done"}, **fields)
     print(json.dumps(result))
+
+
+SHORTS_VERSION = "shorts-v1"
+SHORTS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "shorts": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "first_word": {"type": "integer"},
+                    "last_word": {"type": "integer"},
+                    "title": {"type": "string", "description": "At most 40 characters"},
+                    "hook": {"type": "string", "description": "The first line shown on the video, at most 40 characters"},
+                    "why": {"type": "string", "description": "One short sentence: why this part works on its own"},
+                },
+                "required": ["first_word", "last_word", "title", "hook", "why"],
+                "additionalProperties": False,
+            },
+        }
+    },
+    "required": ["shorts"],
+    "additionalProperties": False,
+}
+SHORTS_PROMPT = """Below is the transcript of a video. Every word is shown as index|word.
+
+Pick up to {most} parts that would work on their own as a short vertical video. Each part must:
+- make one clear point without needing what came before it,
+- start at the start of a sentence and end at the end of a sentence,
+- run between 30 and 60 seconds when spoken (about 75 to 150 words). If the whole video is shorter than that,
+  you may return the whole video as one part, or nothing if it makes no point.
+
+For each part give the first and last word index (both included), a title, a "hook" (the first line shown on the
+video, in the speaker's own plain words), and one sentence on why it works on its own.
+
+The owner's rules for the wording: "Super short, to the point, no fluff, simple human language text, no
+sycophantism." No hype words, no emoji, no hashtags, no exclamation marks. Parts must not overlap. If nothing in
+the video works on its own, return an empty list.
+
+Transcript:
+"""
+
+
+def shorts(pid: str) -> None:
+    """Ask Claude for parts that work on their own, then check and tidy them in code."""
+    d = project_dir(pid)
+    out = d / "shorts.json"
+    words = (read_json(d / "transcript.json", {}) or {}).get("words", [])
+    saved = read_json(out) or {}
+    if len(words) < 12:
+        write_json(out, {"shorts": [], "note": "This video has too little speech to make shorts from."})
+        return
+    listing = " ".join(f'{w["i"]}|{w["w"]}' for w in words)
+    fingerprint = hashlib.sha256(f"{SHORTS_VERSION}\n{CLAUDE_MODEL}\n{listing}".encode()).hexdigest()
+    if saved.get("fingerprint") == fingerprint:
+        print("shorts: transcript unchanged, reusing the saved answer (no tokens)")
+        return
+    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
+        write_json(out, {"shorts": [], "note": "No Claude API key is set on the server, so no shorts were suggested."})
+        return
+    total = words[-1]["end"]
+    answer = _ask_json(SHORTS_PROMPT.format(most=5 if total > 240 else 3 if total > 90 else 1) + listing, SHORTS_SCHEMA)
+    ends = [i for i, w in enumerate(words) if re.search(r"[.?!]$", w["w"])] + [len(words) - 1]
+    found, taken = [], []
+    for c in sorted(answer.get("shorts", []), key=lambda c: c.get("first_word", 0)):
+        a, b = c.get("first_word"), c.get("last_word")
+        if not (isinstance(a, int) and isinstance(b, int)) or not (0 <= a < b < len(words)):
+            continue
+        # Snap to whole sentences, so a short never starts or stops in the middle of one.
+        while a > 0 and not re.search(r"[.?!]$", words[a - 1]["w"]):
+            a -= 1
+        b = next((e for e in ends if e >= b), len(words) - 1)
+        # Keep it to 60 seconds by ending at the last sentence that still fits.
+        while words[b]["end"] - words[a]["start"] > 60:
+            earlier = [e for e in ends if a < e < b]
+            if not earlier:
+                break
+            b = earlier[-1]
+        length = words[b]["end"] - words[a]["start"]
+        if length < min(15, total * 0.5) or any(a <= y and b >= x for x, y in taken):
+            continue
+        taken.append((a, b))
+        found.append({"id": hashlib.sha1(f"{a}-{b}".encode()).hexdigest()[:8], "title": _shorten(c.get("title", ""), 40) or "Short",
+                      "hook": _shorten(c.get("hook", ""), 40), "why": _shorten(c.get("why", ""), 160),
+                      "a": round(max(0.0, words[a]["start"] - 0.15), 2), "b": round(min(total, words[b]["end"] + 0.25), 2),
+                      "kept": False, "gone": False})
+    write_json(out, {"fingerprint": fingerprint, "shorts": found[:5],
+                     "note": None if found else "LOOT found no part of this video that works on its own."})
+    print(f"shorts: {len(found[:5])} suggested")

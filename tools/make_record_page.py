@@ -2,6 +2,9 @@
 
 The page it writes is the source from then on. Run it again only after the recorder mockup changes,
 and check the result by hand.
+
+NOTE: the page this wrote has since been edited by hand. Running this again would overwrite those edits
+and pull in mockup changes that may not be approved yet. Edit the page in app/pages/ directly instead.
 """
 import pathlib
 

@@ -29,13 +29,19 @@
   .bigplay:hover{transform:scale(1.05)}
   .bigplay .ic{width:26px;height:26px;margin-left:4px}
   .playing .bigplay{display:none}
+  .waitmsg{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:0 10%;font-size:17px;line-height:26px;color:var(--ink);z-index:5}
+  .waitmsg i{width:28px;height:28px;border-radius:50%;border:2px solid rgba(246,246,244,.25);border-top-color:var(--ink);animation:wspin .8s linear infinite;display:block}
+  @keyframes wspin{to{transform:rotate(360deg)}}
+  .player.waiting .waitmsg{display:flex}
+  .player.waiting .bigplay,.player.waiting .controls,.player.waiting .cam{display:none}
   .caption{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);font-weight:700;font-size:clamp(14px,2.6vw,26px);color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6);white-space:nowrap;z-index:2;display:none}
   .playing.cc .caption{display:block}
   .controls{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;padding:28px 16px 12px;background:linear-gradient(transparent,rgba(0,0,0,.7));z-index:4}
-  .controls button{background:none;border:0;cursor:pointer;padding:6px;border-radius:2px;display:grid;place-items:center;font-size:13px;font-weight:500;min-width:32px;height:32px}
+  .controls button{background:none;border:0;cursor:pointer;padding:6px;border-radius:2px;display:grid;place-items:center;font-size:13px;font-weight:500;min-width:40px;height:40px;color:#fff}
   .controls button:hover{background:rgba(246,246,244,.14)}
-  .controls button[aria-pressed="true"]{color:#1A1A1A;background:var(--ink)}
-  .scrub{flex:1;height:4px;background:rgba(246,246,244,.28);border-radius:2px;position:relative;cursor:pointer}
+  .controls button[aria-pressed="true"]{box-shadow:inset 0 -2px 0 var(--acc)}
+  .scrub{flex:1;height:4px;background:rgba(246,246,244,.28);border-radius:2px;position:relative;cursor:pointer;margin:18px 0}
+  .scrub::before{content:"";position:absolute;inset:-16px 0}
   .scrub i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--acc);border-radius:2px}
   .scrub i::after{content:"";position:absolute;right:-6px;top:-4px;width:12px;height:12px;border-radius:50%;background:var(--ink)}
   .tm{font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -64,15 +70,17 @@
 <main>
   <div class="player cc" id="player">
     <div class="cam"><img src="assets/avatar-256.png" alt=""></div>
+    <div class="waitmsg"><i></i><span>This video is still being prepared.<br>It will show here by itself in a moment.</span></div>
     <div class="caption" id="caption">Thank you for the introduction</div>
     <button class="bigplay" id="big" aria-label="Play video"><svg class="ic fill"><use href="assets/icons.svg#play"/></svg></button>
     <div class="controls">
       <button id="pp" aria-label="Play"><svg class="ic fill"><use href="assets/icons.svg#play"/></svg></button>
-      <div class="scrub" id="scrub" role="slider" aria-label="Position" aria-valuemin="0" aria-valuemax="65" aria-valuenow="0"><i id="bar"></i></div>
+      <div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Position. Arrow keys move five seconds." aria-valuemin="0" aria-valuemax="65" aria-valuenow="0"><i id="bar"></i></div>
       <span class="tm"><span id="cur">0:00</span> / 1:05</span>
       <button id="speed" aria-label="Playback speed">1×</button>
       <button id="cc" aria-pressed="true" aria-label="Captions"><svg class="ic"><use href="assets/icons.svg#captions"/></svg></button>
       <button id="vol" aria-label="Mute"><svg class="ic"><use href="assets/icons.svg#volume-2"/></svg></button>
+      <button id="fs" aria-label="Full screen"><svg class="ic"><use href="assets/icons.svg#picture-in-picture-2"/></svg></button>
     </div>
   </div>
 
@@ -97,17 +105,27 @@ if(q.get('showcta')==='0')document.getElementById('cta').hidden=true;
 if(q.get('compact'))document.body.classList.add('compact');
 if(q.get('name'))document.getElementById('who').textContent=q.get('name');
 
+// A link that was turned off shows this instead of the video.
+if(q.get('state')==='off'){document.querySelector('main').innerHTML='<section class="about" style="padding-top:96px"><p class="eyebrow">link turned off</p><h1>This video is no longer shared</h1><p class="note">The person who sent it turned the link off. Ask them to send you a new one.</p></section>';document.title='Link turned off';}
 const P=document.getElementById('player'),TOTAL=65;let t=0,timer,rate=1;
+if(P&&q.get('state')==='waiting')P.classList.add('waiting');
+if(P){
 const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
 const lines=['Thank you for the introduction','I looked at the launch plan','and I have two ideas','Happy to talk this week'];
 function show(){document.getElementById('cur').textContent=fmt(t);document.getElementById('bar').style.width=(t/TOTAL*100)+'%';document.getElementById('caption').textContent=lines[Math.floor(t/4)%lines.length];document.getElementById('scrub').setAttribute('aria-valuenow',Math.round(t));}
 function setPlay(on){P.classList.toggle('playing',on);document.querySelector('#pp use').setAttribute('href','assets/icons.svg#'+(on?'pause':'play'));document.getElementById('pp').setAttribute('aria-label',on?'Pause':'Play');clearInterval(timer);if(on)timer=setInterval(()=>{t+=rate;if(t>=TOTAL){t=0;setPlay(false);}show();},1000);}
 document.getElementById('big').onclick=()=>setPlay(true);
+P.querySelector('.cam').onclick=()=>setPlay(!P.classList.contains('playing'));
+document.getElementById('fs').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else if(P.requestFullscreen)P.requestFullscreen();};
+document.getElementById('vol').onclick=e=>{const b=e.currentTarget,mute=b.dataset.m!=='1';b.dataset.m=mute?'1':'0';b.querySelector('use').setAttribute('href','assets/icons.svg#'+(mute?'x':'volume-2'));b.setAttribute('aria-label',mute?'Unmute':'Mute');};
+document.getElementById('scrub').addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();t=Math.min(TOTAL,t+5);show();}if(e.key==='ArrowLeft'){e.preventDefault();t=Math.max(0,t-5);show();}});
+document.addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('button'))return;if(e.code==='Space'){e.preventDefault();setPlay(!P.classList.contains('playing'));}if(e.key.toLowerCase()==='c')document.getElementById('cc').click();});
 document.getElementById('pp').onclick=()=>setPlay(!P.classList.contains('playing'));
 document.getElementById('cc').onclick=e=>{const b=e.currentTarget,on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);P.classList.toggle('cc',on);};
 document.getElementById('speed').onclick=e=>{rate=rate===1?1.5:rate===1.5?2:1;e.currentTarget.textContent=rate+'×';};
 document.getElementById('scrub').onclick=e=>{const r=e.currentTarget.getBoundingClientRect();t=(e.clientX-r.left)/r.width*TOTAL;show();};
 show();
+}
 </script>
 </body>
 </html>

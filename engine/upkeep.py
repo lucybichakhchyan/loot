@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 
 from .common import BACKUPS, DATA, PROJECTS, REPORTS, read_json, write_json
+from .share import live
 
 KEEP_DAYS = float(os.environ.get("LOOT_KEEP_DAYS", "3"))
 MEDIA = ("clips", "exports", "canvas.json", "screen_all.mp4", "cam_all.mp4", "audio_raw.wav", "audio_clean.wav", "audio_raw.m4a", "audio_clean.m4a")
@@ -23,9 +24,19 @@ def cleanup() -> None:
         if not exported:
             waiting += 1
             continue
-        if now - exported < KEEP_DAYS * 86400 or status.get("media_deleted_at"):
+        shared = live(status.get("share"))   # on, and not past its last day
+        if status.get("media_deleted_at"):
+            # The exported video was kept for a share link. Once the link is off or past its last day, it goes too.
+            if not shared and (d / "exports").is_dir():
+                freed += sum(x.stat().st_size for x in (d / "exports").rglob("*") if x.is_file())
+                shutil.rmtree(d / "exports")
+                removed.append(d.name)
+            continue
+        if now - exported < KEEP_DAYS * 86400:
             continue
         for name in MEDIA:
+            if shared and name == "exports":
+                continue   # a live share link still needs the exported video
             f = d / name
             if f.is_dir():
                 freed += sum(x.stat().st_size for x in f.rglob("*") if x.is_file())

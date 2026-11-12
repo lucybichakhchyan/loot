@@ -1,0 +1,20 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: 48cb6c1e-02e9-43a2-9f19-04dfb434ac11
+name: loot-shorts
+version: 1
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+  required: ["project"]
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine shorts ${{ inputs.project }}'
+      workingDir: "/app"
+      timeout: 300000
