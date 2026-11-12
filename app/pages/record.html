@@ -151,7 +151,9 @@
   .shot .wait{font-size:var(--fs-sm);color:var(--fg-faint);text-align:center;max-width:70%}
   .shot.live .wait{display:none}
   .cam video{width:100%;height:100%;object-fit:cover}
-  body.mirror:not(.reviewing) .cam video{transform:scaleX(-1)}
+  /* "Mirror my camera" shows the camera the way a mirror does: while recording, when a clip is watched back,
+     and in the Editor and the export, so the picture never changes direction between steps. */
+  body.mirror .cam video{transform:scaleX(-1)}
   .clip .frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .recbtn[disabled]{opacity:.35;cursor:not-allowed}
   .script .text:empty::before{content:"Type or paste your script here.";color:var(--fg-faint)}

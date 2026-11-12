@@ -355,7 +355,12 @@ function snapshot() {
   const c = document.createElement('canvas'); c.width = 296; c.height = 166;
   const g = c.getContext('2d'); g.fillStyle = '#141118'; g.fillRect(0, 0, c.width, c.height);
   const v = (screenStream && on.screen) ? screenV : camV;
-  if (v.videoWidth) { const s = Math.min(c.width / v.videoWidth, c.height / v.videoHeight), w = v.videoWidth * s, h = v.videoHeight * s; g.drawImage(v, (c.width - w) / 2, (c.height - h) / 2, w, h); }
+  if (v.videoWidth) {
+    const s = Math.min(c.width / v.videoWidth, c.height / v.videoHeight), w = v.videoWidth * s, h = v.videoHeight * s;
+    // A camera-only clip's picture is turned like a mirror too, to match the preview.
+    if (v === camV && mirrorOn) { g.translate(c.width, 0); g.scale(-1, 1); }
+    g.drawImage(v, (c.width - w) / 2, (c.height - h) / 2, w, h);
+  }
   return c.toDataURL('image/jpeg', 0.7);
 }
 

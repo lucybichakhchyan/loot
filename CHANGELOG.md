@@ -2,6 +2,10 @@
 
 Each deployed version has a git tag, such as `v0.1.0`. The newest version is listed first.
 
+## v1.0.1, 12 Nov 2026
+
+- The Recorder shows the camera the same mirrored way when you watch a clip back, and in the picture for camera only clips.
+
 ## v1.0.0, 12 Nov 2026: first full version
 
 - Shorts: Claude suggests the parts of a long video that work on their own. You can keep, trim and download each one as an upright 1080 by 1920 video with captions.
