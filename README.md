@@ -33,6 +33,12 @@ Before the first deploy, set up two things on your own machine and server:
 
 Three things are tied to the original owner and need changing for a copy: the owner name default in `engine/render.py`, the web address in `docker-compose.yml`, and the colors and fonts in `design/tokens.css`. Brand settings, where you set your own name, logo and colors inside the app, is planned but not built yet.
 
+## Versions
+
+Each deployed version has a git tag, such as `v0.1.0`. [CHANGELOG.md](CHANGELOG.md) says in plain words what changed in each version.
+
 ## Status and licence
 
-The first-run setup, the tour and the empty home screen are designed but not built yet. No licence has been chosen yet. A licence will be added before the repository is made public.
+The first-run setup, the tour and the empty home screen are designed but not built yet.
+
+LOOT is released under the MIT licence, in [LICENSE](LICENSE). You may copy, change and reuse it, as long as the licence notice stays with it.
