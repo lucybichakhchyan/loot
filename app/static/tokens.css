@@ -24,8 +24,8 @@
   --surface-2:#2A2338;       /* inputs, cards, timeline tracks */
   --surface-3:#342B45;       /* hover on surfaces */
   --fg:#F6F6F4;              /* main text, never pure white */
-  --fg-muted:rgba(246,246,244,0.66);
-  --fg-faint:rgba(246,246,244,0.42);
+  --fg-muted:#C3BCCD;        /* secondary text, 7:1 or better on every surface */
+  --fg-faint:#A39CAF;        /* hints and timestamps, 5:1 or better on every surface */
   --white:#FFFFFF;
 
   /* Lines */
@@ -80,7 +80,7 @@
   /* Shape and size */
   --radius:6px;           /* tools, controls, cards */
   --radius-editorial:2px; /* share page, brand preview, exported artwork */
-  --control-h:32px;       /* dense tool controls */
+  --control-h:32px;       /* dense tool controls (the smallest clickable size) */
   --control-h-lg:36px;    /* main actions */
   --topbar-h:48px;
   --rail-w:64px;          /* labelled tool rail */
@@ -92,7 +92,7 @@
   --dur-fast:120ms;
   --dur:180ms;
 
-  --focus-ring:0 0 0 2px var(--bg), 0 0 0 4px var(--purple-soft);
+  --focus-ring:0 0 0 2px var(--bg), 0 0 0 4px var(--purple-soft); /* kept for reference; focus now uses outline so it never fights a selected state */
 }
 
 html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:var(--fs-md);line-height:var(--lh-md);-webkit-font-smoothing:antialiased}

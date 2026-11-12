@@ -192,3 +192,105 @@ def cuts(pid: str) -> None:
                      "tokens": {"input": usage.input_tokens, "output": usage.output_tokens}})
     set_status(pid, step={"cuts": "done"})
     print(f"cuts: {len(good)} suggested, {dropped} dropped by the check")
+
+
+DETAILS_VERSION = "details-v1"
+TITLE_MAX, DESCRIPTION_MAX = 60, 200
+DETAILS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string", "description": "At most 60 characters"},
+        "description": {"type": "string", "description": "One or two sentences, at most 200 characters"},
+    },
+    "required": ["title", "description"],
+    "additionalProperties": False,
+}
+DETAILS_PROMPT = """Write a title and a description for a video, from its transcript below.
+
+The owner's rules for the wording, in her words: "Super short, to the point, no fluff, simple human language \
+text, no sycophantism."
+
+- Title: at most 60 characters. Say what the video is about, the way a person would say it to a friend.
+- Description: one or two sentences, at most 200 characters. Say what the viewer will see or learn.
+- No hype words. No praise of the video, the speaker or the viewer. No emoji. No hashtags. No exclamation marks.
+- Do not start with "In this video" or anything like it. Do not use a colon in the title.
+- Use only what is in the transcript. If the transcript is only a sound check or too short to tell what the
+  video is about, give a plain, literal title such as "Sound check" and a one-sentence description of what is said.
+"""
+
+
+def _shorten(text: str, limit: int) -> str:
+    text = " ".join(str(text).split())
+    if len(text) <= limit:
+        return text
+    cut = text[:limit].rsplit(" ", 1)[0].rstrip(" ,;:-")
+    return cut or text[:limit]
+
+
+def _ask_json(prompt: str, schema: dict) -> dict:
+    """One Claude call that must come back as JSON in the given shape."""
+    import anthropic
+
+    client = anthropic.Anthropic()
+    try:
+        response = client.beta.messages.create(
+            model=CLAUDE_MODEL, max_tokens=4000,
+            betas=["server-side-fallback-2026-07-01"], fallbacks="default",
+            output_config={"effort": "low", "format": {"type": "json_schema", "schema": schema}},
+            messages=[{"role": "user", "content": prompt}],
+        )
+    except anthropic.RateLimitError as e:
+        raise SystemExit(f"Claude is rate limited, try again later ({e})")
+    except anthropic.APIStatusError as e:
+        raise SystemExit(f"Claude returned an error {e.status_code}: {e.message}")
+    except anthropic.APIConnectionError as e:
+        raise SystemExit(f"could not reach Claude ({e})")
+    if response.stop_reason in ("refusal", "max_tokens"):
+        raise SystemExit("Claude did not finish its answer")
+    try:
+        return json.loads(next((b.text for b in response.content if b.type == "text"), ""))
+    except json.JSONDecodeError:
+        raise SystemExit("Claude's answer was not valid JSON, nothing was changed")
+
+
+def describe(pid: str, again: bool = False) -> None:
+    """Write a title and a description from the transcript.
+
+    Run after processing, it fills them in only where the owner has not typed her own.
+    Run with `again`, it prints another version and saves nothing; the editor decides what to keep.
+    """
+    d = project_dir(pid)
+    out = d / "details.json"
+    text = (read_json(d / "transcript.json", {}) or {}).get("text", "").strip()
+    if not text:
+        print("describe: there is no speech to write from")
+        return
+    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
+        if again:
+            raise SystemExit("describe: no Claude API key is set on the server")
+        print("describe: skipped, no API key")
+        return
+    fingerprint = hashlib.sha256(f"{DETAILS_VERSION}\n{CLAUDE_MODEL}\n{text}".encode()).hexdigest()
+    saved = read_json(out) or {}
+    if not again and saved.get("fingerprint") == fingerprint:
+        print("describe: transcript unchanged, reusing the saved answer (no tokens)")
+        return
+    prompt = DETAILS_PROMPT
+    if again:
+        avoid = read_json(d / "details_avoid.json") or {}
+        prompt += f"\nShe already has this version and wants a different one. Do not repeat it:\nTitle: {avoid.get('title', '')}\nDescription: {avoid.get('description', '')}\n"
+    answer = _ask_json(prompt + "\nTranscript:\n" + text[:60000], DETAILS_SCHEMA)
+    result = {"title": _shorten(answer.get("title", ""), TITLE_MAX) or "Untitled video",
+              "description": _shorten(answer.get("description", ""), DESCRIPTION_MAX)}
+    if again:
+        print(json.dumps(result))
+        return
+    status = read_json(d / "status.json", {}) or {}
+    fields = {}
+    if (status.get("title") or "Untitled video") in ("Untitled video", saved.get("title")):
+        fields["title"] = result["title"]
+    if (status.get("description") or "") in ("", saved.get("description")):
+        fields["description"] = result["description"]
+    write_json(out, {**result, "fingerprint": fingerprint})
+    set_status(pid, step={"describe": "done"}, **fields)
+    print(json.dumps(result))

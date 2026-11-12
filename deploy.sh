@@ -11,3 +11,5 @@ COPYFILE_DISABLE=1 tar --no-xattrs --exclude design --exclude .git --exclude .en
   --exclude __pycache__ --exclude .DS_Store --exclude '._*' -czf - . \
   | ssh loot 'tar -xzf - -C /docker/loot --no-same-owner 2>/dev/null'
 ssh loot 'cd /docker/loot && docker compose up -d --build 2>&1 | tail -n 25'
+# Old build leftovers pile up on the server's disk; clear them (never touches running containers or their images).
+ssh loot 'docker image prune -f >/dev/null 2>&1; docker builder prune -f --filter until=24h >/dev/null 2>&1' || true

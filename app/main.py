@@ -1,5 +1,6 @@
 """LOOT web app: sign-in, the three screens, and the JSON API they use."""
 import hmac
+import json
 import os
 import queue
 import re
@@ -11,6 +12,7 @@ import time
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from itsdangerous import BadSignature, TimestampSigner
@@ -26,7 +28,7 @@ MAX_UPLOAD = int(float(os.environ.get("LOOT_MAX_UPLOAD_GB", "4")) * 1e9)
 UPLOAD_TYPES = {".mp4", ".webm", ".mov", ".mkv", ".m4v"}
 MEDIA = {"screen_all.mp4", "cam_all.mp4", "audio_clean.m4a", "audio_raw.m4a", "thumb.jpg"}
 KINDS = {"long", "short", "msg", "demo"}
-STEPS = ("prepare", "assemble", "silences", "fillers", "cuts")
+STEPS = ("prepare", "assemble", "silences", "fillers", "cuts", "describe")
 CID_RE = re.compile(r"^[a-z0-9]{8}$")
 
 app = FastAPI(title="LOOT", docs_url=None, redoc_url=None, openapi_url=None)
@@ -138,7 +140,8 @@ def summary(d: Path) -> dict:
     export = read_json(d / "exports" / "export.json", {}) or {}
     done = sum(1 for k in STEPS if k in (s.get("steps") or {}))
     busy = s.get("state") in ("queued", "processing")
-    return {"id": d.name, "title": s.get("title") or "Untitled video", "kind": s.get("kind", "long"),
+    return {"id": d.name, "title": s.get("title") or "Untitled video", "description": s.get("description") or "",
+            "kind": s.get("kind", "long"),
             "state": s.get("state"), "error": s.get("error"), "duration": s.get("duration"),
             "created_at": s.get("created_at"), "updated_at": s.get("updated_at"),
             "progress": round(100 * done / len(STEPS)) if busy else None,
@@ -154,7 +157,9 @@ def list_projects():
     items = [summary(d) for d in dirs]
     items = [i for i in items if i["state"] != "recording" or i["clips"]]
     items.sort(key=lambda i: i.get("created_at") or 0, reverse=True)
-    return {"projects": items, "disk_full": shutil.disk_usage(DATA).free < 3e9}
+    disk = shutil.disk_usage(DATA)
+    return {"projects": items, "disk_full": disk.free < 3e9,
+            "disk": {"used_gb": round(disk.used / 1e9, 1), "total_gb": round(disk.total / 1e9)}}
 
 
 @app.post("/api/projects")
@@ -205,7 +210,8 @@ async def upload_video(file: UploadFile = File(...)):
 
 
 @app.post("/api/projects/{pid}/clips")
-async def add_clip(pid: str, screen: UploadFile | None = File(None), cam: UploadFile | None = File(None), replace: str = ""):
+async def add_clip(pid: str, screen: UploadFile | None = File(None), cam: UploadFile | None = File(None),
+                   replace: str = "", after: str = ""):
     d = pdir(pid)
     if not screen and not cam:
         raise HTTPException(400, "The clip has no screen or camera recording.")
@@ -223,6 +229,9 @@ async def add_clip(pid: str, screen: UploadFile | None = File(None), cam: Upload
     if replace and CID_RE.match(replace) and any(c["id"] == replace for c in clips):
         clips = [{"id": cid} if c["id"] == replace else c for c in clips]
         shutil.rmtree(d / "clips" / replace, ignore_errors=True)
+    elif after and CID_RE.match(after) and any(c["id"] == after for c in clips):
+        at = next(n for n, c in enumerate(clips) if c["id"] == after)
+        clips.insert(at + 1, {"id": cid})   # a retake sits next to the take it may replace
     else:
         clips.append({"id": cid})
     set_status(pid, clips=clips)
@@ -273,6 +282,8 @@ async def rename(pid: str, request: Request):
     fields = {}
     if "title" in body:
         fields["title"] = str(body.get("title") or "").strip()[:200] or "Untitled video"
+    if "description" in body:
+        fields["description"] = str(body.get("description") or "").strip()[:2000]
     if body.get("kind") in KINDS:
         fields["kind"] = body["kind"]
     set_status(pid, **fields)
@@ -311,12 +322,39 @@ async def start_export(pid: str, request: Request):
     if current.get("state") in ("queued", "rendering") and time.time() - (current.get("updated_at") or 0) < 120:
         return current
     (d / "exports").mkdir(exist_ok=True)
+    (d / "exports" / "cancel").unlink(missing_ok=True)
     req = {"state": "queued", "pct": 0, "quality": "720" if body.get("quality") == "720" else "1080",
            "captions": body.get("captions") if body.get("captions") in ("burn", "file", "none") else "burn",
            "updated_at": time.time()}
     write_json(d / "exports" / "export.json", req)
     jobs.put(("render", pid))
     return req
+
+
+@app.post("/api/projects/{pid}/export/cancel")
+def cancel_export(pid: str):
+    ex = pdir(pid) / "exports"
+    state = read_json(ex / "export.json", {}) or {}
+    if state.get("state") in ("queued", "rendering"):
+        (ex / "cancel").write_text("1")   # the export checks for this file and stops
+    return {"ok": True}
+
+
+@app.post("/api/projects/{pid}/describe")
+async def describe_again(pid: str, request: Request):
+    """Another title and description from Claude. Nothing is saved here; the editor keeps what she chooses."""
+    d = pdir(pid)
+    body = await request.json()
+    avoid = body.get("avoid") if isinstance(body.get("avoid"), dict) else {}
+    write_json(d / "details_avoid.json", {"title": str(avoid.get("title", ""))[:300], "description": str(avoid.get("description", ""))[:600]})
+    ok, tail = await run_in_threadpool(run_engine, "describe-again", pid, timeout=90)
+    try:
+        answer = json.loads(tail.strip().splitlines()[-1]) if ok else None
+    except (ValueError, IndexError):
+        answer = None
+    if not answer or "title" not in answer:
+        raise HTTPException(502, "A new version couldn't be written. Try again in a moment.")
+    return {"title": answer["title"], "description": answer.get("description", "")}
 
 
 @app.get("/api/projects/{pid}/export")

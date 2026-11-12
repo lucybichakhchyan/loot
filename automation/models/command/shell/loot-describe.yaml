@@ -1,0 +1,20 @@
+type: command/shell
+typeVersion: 2026.02.09.1
+id: 7539bdfd-bbef-433d-85e1-cde3ce1997c6
+name: loot-describe
+version: 1
+tags: {}
+inputs:
+  properties:
+    project:
+      type: string
+      pattern: "^[a-z0-9]{12}$"
+      description: LOOT project id
+  required: ["project"]
+globalArguments: {}
+methods:
+  execute:
+    arguments:
+      run: 'python -m engine describe ${{ inputs.project }}'
+      workingDir: "/app"
+      timeout: 300000

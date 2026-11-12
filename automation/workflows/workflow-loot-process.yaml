@@ -1,6 +1,6 @@
 id: 46593efb-d247-49b7-9fab-ec5eaed65bfb
 name: loot-process
-description: Get a recording ready for the editor by joining its prepared clips, then marking silences, filler words and suggested cuts. Only the last step uses Claude
+description: Get a recording ready for the editor by joining its prepared clips, then marking silences, filler words and suggested cuts. Only the last two steps use Claude
 tags: {}
 inputs:
   properties:
@@ -71,6 +71,20 @@ jobs:
         task:
           type: behavior
           behavior: loot-cuts
+          methodName: execute
+          inputs:
+            project: ${{ inputs.project }}
+        dependsOn:
+          - step: assemble
+            condition:
+              type: succeeded
+        weight: 0
+        allowFailure: true
+      - name: describe
+        description: Claude writes a short title and description from the transcript; fills them in only where Lucy has not typed her own, and reuses a saved answer when the transcript is unchanged
+        task:
+          type: behavior
+          behavior: loot-describe
           methodName: execute
           inputs:
             project: ${{ inputs.project }}
