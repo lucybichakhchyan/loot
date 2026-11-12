@@ -50,14 +50,38 @@ def transcribe_file(wav) -> list:
 
     if _model is None:
         _model = WhisperModel(WHISPER_MODEL, device="cpu", compute_type="int8", download_root=WHISPER_DIR)
-    segments, _ = _model.transcribe(load_16k(wav), word_timestamps=True, vad_filter=True, beam_size=BEAM,
-                                    initial_prompt=KEEP_FILLERS, condition_on_previous_text=False)
-    words = []
-    for seg in segments:
-        for w in seg.words or []:
-            text = w.word.strip()
-            if text:
-                words.append({"w": text, "start": round(w.start, 3), "end": round(w.end, 3)})
+    audio = load_16k(wav)
+
+    def timed(samples, offset=0.0, **extra) -> list:
+        segments, _ = _model.transcribe(samples, word_timestamps=True, vad_filter=True, beam_size=BEAM,
+                                        condition_on_previous_text=False, **extra)
+        return [{"w": w.word.strip(), "start": round(w.start + offset, 3), "end": round(w.end + offset, 3)}
+                for seg in segments for w in (seg.words or []) if w.word.strip()]
+
+    # Whisper's word timing can crash on some recordings (an IndexError inside faster-whisper's alignment).
+    # A recording must never fail for that, so LOOT tries again in safer ways before giving up on exact timings.
+    try:
+        return timed(audio, initial_prompt=KEEP_FILLERS)
+    except (IndexError, ValueError) as e:
+        print(f"transcribe: word timing failed ({str(e)[:80]}), trying again without the filler hint")
+    try:
+        return timed(audio)
+    except (IndexError, ValueError):
+        print("transcribe: trying again in 30-second pieces")
+    words, piece = [], 30 * 16000
+    for start in range(0, len(audio), piece):
+        chunk, offset = audio[start:start + piece], start / 16000
+        try:
+            words += timed(chunk, offset)
+        except (IndexError, ValueError):
+            # Last resort for this piece: the words without exact timings, spread evenly over each sentence.
+            segments, _ = _model.transcribe(chunk, word_timestamps=False, vad_filter=True, beam_size=BEAM,
+                                            condition_on_previous_text=False)
+            for seg in segments:
+                parts = seg.text.split()
+                step = (seg.end - seg.start) / max(1, len(parts))
+                words += [{"w": t, "start": round(offset + seg.start + i * step, 3),
+                           "end": round(offset + seg.start + (i + 1) * step, 3)} for i, t in enumerate(parts)]
     return words
 
 

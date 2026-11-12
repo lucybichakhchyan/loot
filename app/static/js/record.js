@@ -213,14 +213,79 @@ function setScript(open) { B.classList.toggle('script-open', open); $('#scriptBt
 $('#scriptBtn').onclick = () => setScript(!B.classList.contains('script-open'));
 $('#scriptClose').onclick = () => setScript(false);
 $$('.switch').forEach(s => s.addEventListener('click', () => s.setAttribute('aria-checked', s.getAttribute('aria-checked') !== 'true')));
-try { const saved = localStorage.getItem('loot-script'); if (saved) scriptText.innerText = saved; } catch (e) { /* private window */ }
-scriptText.addEventListener('input', () => { try { localStorage.setItem('loot-script', scriptText.innerText); } catch (e) { /* ignore */ } });
+// The script keeps its formatting: line breaks, blank lines, bold, italics, underline and lists.
+// Anything else that comes with pasted text (fonts, colors, sizes) is dropped, so the script always reads clearly.
+const KEEP = { B: 'b', STRONG: 'b', I: 'i', EM: 'i', U: 'u', BR: 'br', UL: 'ul', OL: 'ol', LI: 'li' };
+const BLOCK = /^(P|DIV|H[1-6]|BLOCKQUOTE|PRE|SECTION|ARTICLE|TR)$/;
+function cleanScript(html) {
+  const src = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html').body, out = document.createElement('div');
+  const walk = (node, into) => {
+    for (const n of [...node.childNodes]) {
+      if (n.nodeType === 3) { into.appendChild(document.createTextNode(n.nodeValue.replace(/ /g, ' '))); continue; }
+      if (n.nodeType !== 1 || /^(SCRIPT|STYLE|META|LINK|TITLE|IMG|SVG|IFRAME|OBJECT)$/.test(n.tagName)) continue;
+      const st = n.getAttribute('style') || '';
+      let tag = KEEP[n.tagName] || (BLOCK.test(n.tagName) ? 'p' : '');
+      // Google Docs wraps a whole paste in <b style="font-weight:normal">, and marks real bold with a style.
+      if (tag === 'b' && /font-weight:\s*(normal|[1-5]00)\b/.test(st)) tag = '';
+      if (!tag && /font-weight:\s*(bold|[6-9]00)\b/.test(st)) tag = 'b';
+      if (!tag && /font-style:\s*italic/.test(st)) tag = 'i';
+      if (!tag && /text-decoration[^;]*underline/.test(st)) tag = 'u';
+      if (!tag) { walk(n, into); continue; }
+      const el = document.createElement(tag); into.appendChild(el); if (tag !== 'br') walk(n, el);
+    }
+  };
+  walk(src, out);
+  return out.innerHTML.replace(/<p>\s*<\/p>/g, '<p><br></p>');
+}
+// Plain text: a blank line starts a new paragraph, a single line break stays a line break.
+const textToHtml = t => t.replace(/\r/g, '').split(/\n{2,}/).map(par => `<p>${par.split('\n').map(l => l.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))).join('<br>') || '<br>'}</p>`).join('');
+function saveScript() { try { localStorage.setItem('loot-script-html', scriptText.innerHTML); } catch (e) { /* private window */ } }
+try {
+  const html = localStorage.getItem('loot-script-html'), old = localStorage.getItem('loot-script');
+  scriptText.innerHTML = html !== null ? cleanScript(html) : old ? textToHtml(old) : '';
+} catch (e) { scriptText.innerHTML = ''; }
+scriptText.addEventListener('input', () => { if (!scriptText.textContent.trim() && !scriptText.querySelector('li')) scriptText.innerHTML = ''; saveScript(); });
+scriptText.addEventListener('paste', e => {
+  const cd = e.clipboardData; if (!cd) return;
+  const html = cd.getData('text/html'), text = cd.getData('text/plain');
+  e.preventDefault();
+  document.execCommand('insertHTML', false, html ? cleanScript(html) : textToHtml(text));
+  saveScript();
+});
+// Keyboard bold, italics and underline work as in a document.
+scriptText.addEventListener('keydown', e => {
+  if (!(e.metaKey || e.ctrlKey)) return;
+  const cmd = { b: 'bold', i: 'italic', u: 'underline' }[e.key.toLowerCase()];
+  if (cmd) { e.preventDefault(); document.execCommand(cmd); saveScript(); }
+});
 let scrollTimer;
 function autoScroll(run) {
   clearInterval(scrollTimer); if (!run) return;
-  // The script becomes plain paragraphs for the take, so the one being read can be marked.
-  const lines = scriptText.innerText.split(/\n+/).map(l => l.trim()).filter(Boolean);
-  scriptText.innerHTML = ''; lines.forEach(l => { const p = document.createElement('p'); p.textContent = l; scriptText.appendChild(p); });
+  // Loose lines typed straight into the panel are grouped into paragraphs, so the part being read can be marked.
+  // The words, line breaks and formatting stay exactly as they are.
+  const loose = [...scriptText.childNodes].some(n => n.nodeType === 3 ? n.nodeValue.trim() : !/^(P|UL|OL)$/.test(n.tagName));
+  if (loose) {
+    const frag = document.createElement('div'); let cur = null, brs = 0;
+    for (const n of [...scriptText.childNodes]) {
+      const block = n.nodeType === 1 && /^(P|UL|OL)$/.test(n.tagName);
+      if (block) { cur = null; brs = 0; frag.appendChild(n); continue; }
+      // Typing Enter in the panel makes a new line (a <div>). An empty line starts a new paragraph;
+      // any other line joins the paragraph it belongs to, after a line break.
+      if (n.nodeType === 1 && n.tagName === 'DIV') {
+        if (!n.textContent.trim()) { cur = null; brs = 0; continue; }
+        if (!cur) { cur = document.createElement('p'); frag.appendChild(cur); } else cur.appendChild(document.createElement('br'));
+        while (n.firstChild) cur.appendChild(n.firstChild);
+        brs = 0; continue;
+      }
+      if (n.nodeType === 1 && n.tagName === 'BR') { brs++; if (brs >= 2) { cur = null; continue; } }
+      else if (n.nodeType === 3 && !n.nodeValue.trim() && !cur) continue;
+      else brs = 0;
+      if (!cur) { cur = document.createElement('p'); frag.appendChild(cur); }
+      cur.appendChild(n);
+    }
+    [...frag.querySelectorAll('p')].forEach(par => { while (par.lastChild && par.lastChild.nodeName === 'BR') par.lastChild.remove(); });
+    scriptText.innerHTML = frag.innerHTML; saveScript();
+  }
   scriptText.style.scrollBehavior = 'auto'; scriptText.scrollTop = 0; let pos = 0; scriptLine();
   scrollTimer = setInterval(() => {
     if (B.classList.contains('paused')) return;
@@ -375,7 +440,7 @@ async function openController() {
     pip.document.body.innerHTML = `<style>
       body{margin:0;background:#1E1A27;color:#F6F6F4;font:13px/1.3 Inter,system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;height:100vh}
       .tele{flex:1;min-height:0;overflow:auto;padding:12px 16px;font-size:18px;line-height:27px;border-bottom:1px solid rgba(246,246,244,.14)}
-      .tele[hidden]{display:none}.tele small{display:block;font-size:12px;color:#BEADD6;margin-bottom:4px}
+      .tele[hidden]{display:none}.tele p{margin:0}.tele small{display:block;font-size:12px;color:#BEADD6;margin-bottom:4px}
       .ctl{display:flex;align-items:center;gap:4px;padding:6px 8px;flex:none}
       .t{display:flex;align-items:center;gap:8px;padding:0 10px;font-variant-numeric:tabular-nums;font-weight:500;font-size:15px}
       .dot{width:8px;height:8px;border-radius:50%;background:#E66A63;animation:blink 1.2s infinite}@keyframes blink{50%{opacity:.25}}
@@ -406,11 +471,11 @@ async function openController() {
 }
 // The paragraph being read: shown brighter in the script panel, and in the controller when its Script is open.
 function scriptLine() {
-  const ps = $$('p', scriptText); if (!ps.length) return;
+  const ps = $$('p, li', scriptText).filter(el => el.textContent.trim()); if (!ps.length) return;
   const top = scriptText.scrollTop + 24;
   let now = ps.find(p => p.offsetTop + p.offsetHeight > top) || ps[ps.length - 1];
   ps.forEach(p => p.classList.toggle('now', p === now));
-  if (pip) { const line = pip.document.getElementById('line'); if (line) line.textContent = now.textContent; }
+  if (pip) { const line = pip.document.getElementById('line'); if (line) line.innerHTML = now.innerHTML; }
 }
 function closeController() { if (pip) { try { pip.close(); } catch (e) { /* already closed */ } pip = null; } }
 

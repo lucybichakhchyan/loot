@@ -49,6 +49,10 @@
   .script .text{flex:1;overflow:auto;padding:var(--space-5) var(--space-4);font-size:20px;line-height:30px;color:var(--fg-muted);outline:none;scroll-behavior:smooth}
   .script .text p{margin:0 0 var(--space-4)}
   .script .text p.now{color:var(--white)}
+  .script .text li.now{color:var(--white)}
+  .script .text ul,.script .text ol{margin:0 0 var(--space-4);padding-left:1.2em}
+  .script .text li{margin:0 0 var(--space-2)}
+  .script .text b{color:inherit;font-weight:700}
   .script .sf{border-top:1px solid var(--line);padding:var(--space-3) var(--space-4);display:flex;flex-direction:column;gap:var(--space-2)}
   .script .sf .row{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);font-size:var(--fs-sm)}
   .script .sf input[type=range]{width:120px}
@@ -146,13 +150,15 @@
     .cliprow .side .sum{display:none}
   }
   .shot{background:#0d0b10;align-items:center;justify-content:center}
-  .shot video{width:100%;height:100%;object-fit:contain;display:none}
+  /* The screen picture is out of the flow, like the camera's, so it never changes the frame's size. */
+  .shot video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none}
   .shot.live video{display:block}
   .shot .wait{font-size:var(--fs-sm);color:var(--fg-faint);text-align:center;max-width:70%}
   .shot.live .wait{display:none}
-  .cam video{width:100%;height:100%;object-fit:cover}
   /* "Mirror my camera" shows the camera the way a mirror does: while recording, when a clip is watched back,
      and in the Editor and the export, so the picture never changes direction between steps. */
+  /* The camera picture is out of the flow, so it can never stretch the bubble (also here, in case an older app.css is cached). */
+  .cam video{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover}
   body.mirror .cam video{transform:scaleX(-1)}
   .clip .frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .recbtn[disabled]{opacity:.35;cursor:not-allowed}
@@ -217,8 +223,7 @@
 
   <aside class="script" aria-label="Script">
     <div class="sh"><b>Script</b><button class="iconbtn" id="scriptClose" aria-label="Close script"><svg class="ic"><use href="/static/assets/icons.svg#x"/></svg></button></div>
-    <div class="text" id="scriptText" contenteditable="true" spellcheck="false" aria-label="Your script. Type or paste it here.">
-      </div>
+    <div class="text" id="scriptText" contenteditable="true" spellcheck="false" aria-label="Your script. Type or paste it here."></div>
     <div class="sf">
       <div class="row"><span>Scroll while I record</span><button class="switch" role="switch" aria-checked="true" id="scrollSwitch" aria-label="Scroll while I record"></button></div>
       <div class="row"><span>Scroll speed</span><input type="range" value="45" id="scrollSpeed" aria-label="Scroll speed"></div>

@@ -105,7 +105,9 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;b
 .shot .row:nth-child(odd){background:#EDEBE7;border-left-color:#C9C6BF}
 /* Camera stand-in */
 .cam{position:absolute;right:4%;bottom:6%;width:18%;aspect-ratio:1;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#6A578F,#2D253A);box-shadow:0 0 0 2px rgba(246,246,244,.9);transition:all var(--dur) var(--ease)}
-.cam img{width:100%;height:100%;object-fit:cover;object-position:50% 30%;transform:scale(1.15) translateY(6%)}
+/* The picture is taken out of the flow so it can never stretch the bubble: the bubble's size comes only from its own width and aspect-ratio. */
+.cam img,.cam video{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover}
+.cam img{object-position:50% 30%;transform:scale(1.15) translateY(6%)}
 /* Layout variants on a .frame */
 .frame[data-layout="side"] .shot{inset:12% 40% 12% 4%}
 .frame[data-layout="side"] .cam{right:4%;bottom:12%;top:12%;width:33%;height:auto;aspect-ratio:auto;border-radius:3px;box-shadow:none}

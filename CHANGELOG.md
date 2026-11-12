@@ -2,6 +2,12 @@
 
 Each deployed version has a git tag, such as `v0.1.0`. The newest version is listed first.
 
+## v1.0.2, 12 Nov 2026
+
+- The teleprompter keeps your script's line breaks, blank lines, bold, italics and lists, including text pasted from Google Docs.
+- A recording no longer fails when Whisper's word timing crashes. LOOT tries again in safer ways.
+- The camera bubble stays a circle while recording, and the picture fills it.
+
 ## v1.0.1, 12 Nov 2026
 
 - The Recorder shows the camera the same mirrored way when you watch a clip back, and in the picture for camera only clips.
