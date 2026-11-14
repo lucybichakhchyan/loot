@@ -1,0 +1,35 @@
+name: Bug report
+description: Something in LOOT doesn't work the way it should.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Say what you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can I see it myself?
+      description: List the steps, one per line.
+      placeholder: |
+        1. Open the Recorder
+        2. Click Record
+        3. ...
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: Chrome 131 on macOS
+  - type: input
+    id: version
+    attributes:
+      label: LOOT version
+      description: The newest tag you run, such as v1.0.2.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshot or anything else
+      description: Drag a screenshot or a short recording here if you have one. Please leave out passwords and API keys.

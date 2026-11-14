@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/lucybichakhchyan/loot/security/advisories/new
+    about: Please report security problems here, not in a public issue.
+  - name: Try the clickable demo
+    url: https://lucybichakhchyan.github.io/loot/
+    about: See every screen of LOOT in your browser.
